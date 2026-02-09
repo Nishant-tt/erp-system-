@@ -1,0 +1,24 @@
+{
+  "name": "erp-system-",
+  "version": "1.0.0",
+  "description": "I designed an ERP system for small businesses with role-based access, inventory, sales, purchase, and accounting modules. I first analyzed real business workflows and then designed the data model and APIs accordingly.",
+  "main": "index.js",
+  "scripts": {
+    "start": "concurrently \"npm run dev --prefix backend\" \"npm start --prefix frontend\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Nishant-gNxtSystems/erp-system-.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Nishant-gNxtSystems/erp-system-/issues"
+  },
+  "homepage": "https://github.com/Nishant-gNxtSystems/erp-system-#readme",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
