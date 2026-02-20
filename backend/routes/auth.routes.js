@@ -38,4 +38,26 @@ router.post("/login", auth.login);
  */
 router.post("/logout", authMiddleware, auth.logout);
 
+/**
+ * @swagger
+ * /api/auth/forgot-password:
+ *   post:
+ *     summary: Request password reset
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Reset link sent
+ */
+router.post("/forgot-password", auth.forgotPassword);
+
+
 module.exports = router;

@@ -1,133 +1,175 @@
 import React, { useState } from 'react';
-import { Mail, Lock, LogIn, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, LogIn, Eye, EyeOff, Loader2, ShieldCheck } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+
+import { loginAPI } from '../../api/auth';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Login attempt:', { email, password });
-    // Handle login logic here
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const data = await loginAPI(email, password);
+
+      // Store auth data in sessionStorage
+      sessionStorage.setItem('token', data.token);
+      sessionStorage.setItem('userId', data.user._id);
+      sessionStorage.setItem('userName', data.user.name);
+      sessionStorage.setItem('role', data.user.role.name);
+
+      console.log('Login successful:', data.user.role.name);
+      navigate('/dashboard');
+    } catch (err) {
+      setError(err.message || 'Authentication failed. Please check your credentials.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%)',
-      padding: '1.5rem'
-    }}>
-      <div className="glass-effect" style={{
-        width: '100%',
-        maxWidth: '440px',
-        padding: '2.5rem',
-        borderRadius: '1.5rem',
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
-      }}>
-        <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-          <div style={{
-            width: '64px',
-            height: '64px',
-            backgroundColor: 'white',
-            borderRadius: '1rem',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            margin: '0 auto 1.25rem',
-            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
-          }}>
-            <LogIn size={32} color="#6366f1" />
-          </div>
-          <h1 style={{ fontSize: '1.875rem', fontWeight: '700', color: '#111827', marginBottom: '0.5rem' }}>
-            Welcome Back
-          </h1>
-          <p style={{ color: '#4b5563', fontSize: '0.975rem' }}>
-            Enter your credentials to access your account
-          </p>
+    <div className="min-h-screen bg-[#F8FAFC] flex font-sans">
+      {/* Left Side - Visual/Marketing (Hidden on mobile) */}
+      <div className="hidden lg:flex lg:w-1/2 bg-[#0F172A] relative overflow-hidden items-center justify-center p-12">
+        <div className="absolute top-0 left-0 w-full h-full opacity-20">
+          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-blue-500 blur-[120px]"></div>
+          <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-indigo-600 blur-[120px]"></div>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          <div>
-            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>
-              Email Address
-            </label>
-            <div style={{ position: 'relative' }}>
-              <div style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }}>
-                <Mail size={18} />
+        <div className="relative z-10 max-w-lg text-center lg:text-left">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
+              <ShieldCheck className="text-white" size={28} />
+            </div>
+            <span className="text-2xl font-bold text-white tracking-tight underline tracking-widest leading-none">
+              G<span className="text-blue-500">NXT</span> SYSTEMS
+            </span>
+          </div>
+          <h1 className="text-5xl font-extrabold text-white mb-6 leading-tight">
+            Advanced Enterprise <br />
+            <span className="text-blue-500">Resource Planning</span>
+          </h1>
+          <p className="text-slate-400 text-lg mb-8 leading-relaxed">
+            Experience the future of business management with our integrated ERP ecosystem. Secure, scalable, and intelligent.
+          </p>
+          <div className="grid grid-cols-2 gap-6 pt-8 border-t border-slate-800">
+            <div>
+              <p className="text-3xl font-bold text-white mb-1">99.9%</p>
+              <p className="text-slate-500 text-sm">System Uptime</p>
+            </div>
+            <div>
+              <p className="text-3xl font-bold text-white mb-1">24/7</p>
+              <p className="text-slate-500 text-sm">Active Monitoring</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Right Side - Login Form */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-white lg:bg-[#F8FAFC]">
+        <div className="w-full max-w-[420px]">
+          <div className="mb-10">
+            <div className="lg:hidden flex items-center gap-2 mb-8">
+              <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                <ShieldCheck className="text-white" size={24} />
               </div>
-              <input
-                type="email"
-                placeholder="name@company.com"
-                className="input-field"
-                style={{ paddingLeft: '2.75rem' }}
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
+              <span className="text-xl font-black text-slate-900 tracking-tighter">GNXT</span>
             </div>
+            <h2 className="text-3xl font-bold text-slate-900 mb-3 tracking-tight">Welcome Back</h2>
+            <p className="text-slate-500">Please enter your details to sign in to your dashboard.</p>
           </div>
 
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'between', alignItems: 'center', marginBottom: '0.5rem' }}>
-              <label style={{ fontSize: '0.875rem', fontWeight: '600', color: '#374151' }}>
-                Password
-              </label>
-              <a href="#" style={{ fontSize: '0.875rem', fontWeight: '500', color: '#6366f1', textDecoration: 'none' }}>
-                Forgot Password?
-              </a>
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-xl flex gap-3 items-center text-red-700 text-sm leading-snug">
+              <div className="w-2 h-2 rounded-full bg-red-500 shrink-0"></div>
+              {error}
             </div>
-            <div style={{ position: 'relative' }}>
-              <div style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }}>
-                <Lock size={18} />
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-slate-700 tracking-wide">Work Email</label>
+              <div className="relative group">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors">
+                  <Mail size={18} />
+                </div>
+                <input
+                  type="email"
+                  placeholder="name@company.com"
+                  className="w-full pl-12 pr-4 py-3.5 bg-white border border-slate-200 rounded-xl outline-none transition-all focus:border-blue-600 focus:ring-4 focus:ring-blue-500/5 placeholder:text-slate-400"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  disabled={isLoading}
+                />
               </div>
-              <input
-                type={showPassword ? 'text' : 'password'}
-                placeholder="••••••••"
-                className="input-field"
-                style={{ paddingLeft: '2.75rem', paddingRight: '2.75rem' }}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                style={{
-                  position: 'absolute',
-                  right: '1rem',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'none',
-                  border: 'none',
-                  color: '#9ca3af',
-                  display: 'flex',
-                  alignItems: 'center'
-                }}
-              >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
             </div>
+
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <label className="text-sm font-semibold text-slate-700 tracking-wide">Password</label>
+              </div>
+              <div className="relative group">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors">
+                  <Lock size={18} />
+                </div>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="••••••••"
+                  className="w-full pl-12 pr-12 py-3.5 bg-white border border-slate-200 rounded-xl outline-none transition-all focus:border-blue-600 focus:ring-4 focus:ring-blue-500/5 placeholder:text-slate-400"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  disabled={isLoading}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                  disabled={isLoading}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </div>
+            <div className="text-right">
+              <Link to="/forgot-password" size="sm" className="text-sm font-bold text-blue-600 hover:text-blue-700 hover:underline transition-colors">
+                Forgot Password
+              </Link>
+            </div>
+            <button
+              type="submit"
+              className="w-full py-4 bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-bold rounded-xl shadow-xl shadow-blue-600/20 transition-all active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100 flex items-center justify-center gap-3 group"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 size={20} className="animate-spin" />
+                  Authenticating...
+                </>
+              ) : (
+                <>
+                  Sign In to ERP
+                  <LogIn size={20} className="group-hover:translate-x-1 transition-transform" />
+                </>
+              )}
+            </button>
+          </form>
+
+          <div className="mt-10 text-center">
+            <p className="text-slate-500 text-sm">
+              Secured Connection • <span className="font-semibold text-slate-700">AES-256 Encryption</span>
+            </p>
           </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <input type="checkbox" id="remember" style={{ cursor: 'pointer' }} />
-            <label htmlFor="remember" style={{ fontSize: '0.875rem', color: '#4b5563', cursor: 'pointer' }}>
-              Remember for 30 days
-            </label>
-          </div>
-
-          <button type="submit" className="btn-primary" style={{ width: '100%', marginTop: '0.5rem' }}>
-            Sign In
-          </button>
-        </form>
-
-        <p style={{ marginTop: '2rem', textAlign: 'center', fontSize: '0.875rem', color: '#4b5563' }}>
-          Don't have an account? <a href="#" style={{ fontWeight: '600', color: '#6366f1', textDecoration: 'none' }}>Contact Admin</a>
-        </p>
+        </div>
       </div>
     </div>
   );

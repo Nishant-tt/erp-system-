@@ -2,34 +2,32 @@ import React, { useState } from 'react';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import Footer from './Footer';
+import { Outlet } from 'react-router-dom';
 
-const DashboardLayout = ({ children }) => {
-    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
+const DashboardLayout = () => {
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
 
     const toggleSidebar = () => {
         setIsSidebarOpen(!isSidebarOpen);
     };
 
     return (
-        <div style={{ display: 'flex', minHeight: '100vh' }}>
+        <div className="flex min-h-screen bg-slate-50 font-sans">
             <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
-            <div style={{
-                flex: 1,
-                marginLeft: isSidebarOpen ? 'var(--sidebar-width)' : 'var(--sidebar-collapsed-width)',
-                transition: 'margin-left 0.3s ease',
-                display: 'flex',
-                flexDirection: 'column'
-            }}>
-                <Header />
+            <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${isSidebarOpen ? 'pl-64' : 'pl-16'}`}>
+                <Header toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />
 
-                <main style={{ flex: 1, padding: '2rem' }}>
-                    {children}
+                <main className="flex-1 p-8 pb-24">
+                    <Outlet />
                 </main>
 
-                <Footer />
+                <Footer isSidebarOpen={isSidebarOpen} />
             </div>
         </div>
+
     );
 };
 

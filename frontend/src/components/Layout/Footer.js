@@ -1,25 +1,31 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { LogOut } from 'lucide-react';
+import { logoutAPI } from '../../api/auth';
 
-const Footer = () => {
+
+const Footer = ({ isSidebarOpen }) => {
+    const navigate = useNavigate();
+
+    const handleLogout = async () => {
+        try {
+            await logoutAPI();
+            sessionStorage.clear();
+            navigate('/login');
+        } catch (error) {
+            console.error('Logout error:', error);
+            // Even if API fails, clear session and go to login
+            sessionStorage.clear();
+            navigate('/login');
+        }
+    };
+
     return (
-        <footer style={{
-            height: 'var(--footer-height)',
-            padding: '0 1.5rem',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            backgroundColor: 'transparent',
-            borderTop: '1px solid var(--border)',
-            color: 'var(--secondary)',
-            fontSize: '0.875rem'
-        }}>
-            <p>&copy; {new Date().getFullYear()} ERP Pro. All rights reserved.</p>
-            <div style={{ display: 'flex', gap: '1.5rem' }}>
-                <a href="#" style={{ color: 'inherit', textDecoration: 'none' }}>Privacy Policy</a>
-                <a href="#" style={{ color: 'inherit', textDecoration: 'none' }}>Terms of Service</a>
-            </div>
+        <footer className={`fixed bottom-0 right-0 h-10 px-8 flex items-center justify-center bg-white border-t border-slate-200 text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] z-40 transition-all duration-300 ${isSidebarOpen ? 'left-64' : 'left-16'}`}>
+            <p>&copy; {new Date().getFullYear()} G-NXT Systems - Enterprise Resource Planning Solution</p>
         </footer>
     );
 };
+
 
 export default Footer;

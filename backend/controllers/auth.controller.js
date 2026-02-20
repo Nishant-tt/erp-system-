@@ -1,6 +1,6 @@
-// controllers/auth.controller.js
 const User = require("../models/User");
 const Role = require("../models/Role");
+const Session = require("../models/Session");
 const { hashPassword, comparePassword } = require("../utils/hash");
 const { generateToken } = require("../utils/jwt");
 const config = require("../config/config");
@@ -30,4 +30,22 @@ exports.logout = async (req, res) => {
   const token = req.headers.authorization?.split(" ")[1];
   await Session.updateOne({ token }, { isActive: false });
   res.json({ message: "Logged out successfully" });
+};
+
+exports.forgotPassword = async (req, res) => {
+  const { email } = req.body;
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found with this email" });
+    }
+
+    // In a real application, you would generate a reset token and send an email here.
+    // For this task, we will just return a success message.
+    console.log(`Password reset requested for: ${email}`);
+
+    res.json({ message: "Password reset link has been sent to your email (Mocked)" });
+  } catch (error) {
+    res.status(500).json({ message: "Error processing forgot password request", error: error.message });
+  }
 };
