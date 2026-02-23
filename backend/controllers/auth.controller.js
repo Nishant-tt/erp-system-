@@ -17,6 +17,7 @@ exports.login = async (req, res) => {
   const token = generateToken({
     id: user._id,
     role: user.role.name,
+    department: user.department,
   });
 
   const expiresAt = new Date(Date.now() + config.sessionExpireMinutes * 60000);

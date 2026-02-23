@@ -7,6 +7,7 @@ import {
     ChevronRight,
     ChevronLeft,
     LayoutDashboard,
+    ClipboardList,
 } from 'lucide-react';
 import { getModulesAPI } from '../../api/modules';
 import { logoutAPI } from '../../api/auth';
@@ -84,17 +85,17 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                     {isOpen && (
                         <div className="flex flex-col leading-none">
                             <span className="font-black text-xl text-white tracking-tighter">
-                                G-NXT
+                                PO
                             </span>
                             <span className="text-[10px] font-bold text-blue-500 tracking-[0.2em] mt-0.5">
-                                SYSTEMS
+                                MANAGER
                             </span>
                         </div>
                     )}
                 </div>
             </div>
 
-            <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto custom-scrollbar">
+            <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto overflow-x-hidden custom-scrollbar">
                 {isLoading ? (
                     <div className="flex justify-center py-4">
                         <LucideIcons.Loader2 className="animate-spin text-slate-500" size={20} />
@@ -150,7 +151,89 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                         );
                     })
                 )}
+                <div className="pt-4 pb-2 px-3">
+                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-3 mb-2">Procurement Flow</p>
+                    <button
+                        onClick={() => navigate('/prs')}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group/pr ${location.pathname === '/prs'
+                            ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
+                            : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                            } ${!isOpen && 'justify-center px-1'}`}
+                    >
+                        <ClipboardList size={20} className={location.pathname === '/prs' ? 'text-white' : 'text-slate-400 group-hover/pr:text-white'} />
+                        {isOpen && <span className="font-semibold text-sm tracking-wide flex-1 text-left">My PRs</span>}
+                    </button>
+                    {(userRole === 'Admin' || userRole === 'Manager') && (
+                        <button
+                            onClick={() => navigate('/prs/approvals')}
+                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group/approval ${location.pathname === '/prs/approvals'
+                                ? 'bg-amber-600 text-white shadow-lg shadow-amber-500/20'
+                                : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                                } ${!isOpen && 'justify-center px-1'}`}
+                        >
+                            <LucideIcons.CheckCircle size={20} className={location.pathname === '/prs/approvals' ? 'text-white' : 'text-slate-400 group-hover/approval:text-white'} />
+                            {isOpen && <span className="font-semibold text-sm tracking-wide flex-1 text-left">Approval Queue</span>}
+                        </button>
+                    )}
+                    <button
+                        onClick={() => navigate('/performance')}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group/perf ${location.pathname === '/performance'
+                            ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20'
+                            : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                            } ${!isOpen && 'justify-center px-1'}`}
+                    >
+                        <LucideIcons.BarChart3 size={20} className={location.pathname === '/performance' ? 'text-white' : 'text-slate-400 group-hover/perf:text-white'} />
+                        {isOpen && <span className="font-semibold text-sm tracking-wide flex-1 text-left">Performance</span>}
+                    </button>
+                </div>
             </nav>
+
+            <div className="px-3 pb-2 space-y-1">
+                {userRole === 'Admin' && (
+                    <div className="space-y-1">
+                        <button
+                            onClick={() => toggleModule('admin-suite', '/admin')}
+                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group/admin ${location.pathname.startsWith('/admin')
+                                ? 'bg-primary text-white shadow-lg shadow-primary/20'
+                                : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                                } ${!isOpen && 'justify-center px-1'}`}
+                        >
+                            <ShieldCheck size={20} className={location.pathname.startsWith('/admin') ? 'text-white' : 'text-slate-400 group-hover/admin:text-white'} />
+                            {isOpen && (
+                                <>
+                                    <span className="font-semibold text-sm tracking-wide flex-1 text-left">Admin Console</span>
+                                    <ChevronRight
+                                        size={14}
+                                        className={`transition-transform duration-200 ${expandedModule === 'admin-suite' ? 'rotate-90' : ''}`}
+                                    />
+                                </>
+                            )}
+                        </button>
+
+                        {isOpen && expandedModule === 'admin-suite' && (
+                            <div className="ml-9 space-y-1 py-1">
+                                {[
+                                    { name: 'User Management', path: '/admin/users' },
+                                    { name: 'Roles & Permissions', path: '/admin/roles' },
+                                    { name: 'Departments', path: '/admin/departments' },
+                                    { name: 'Supplier Directory', path: '/admin/suppliers' },
+                                ].map((sub, idx) => (
+                                    <button
+                                        key={idx}
+                                        onClick={() => navigate(sub.path)}
+                                        className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${location.pathname === sub.path
+                                            ? 'text-blue-400 bg-blue-500/5'
+                                            : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800'
+                                            }`}
+                                    >
+                                        {sub.name}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
 
             <div className="p-3 border-t border-slate-800">
                 <Link

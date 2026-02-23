@@ -49,16 +49,16 @@ const LoginPage = () => {
             <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
               <ShieldCheck className="text-white" size={28} />
             </div>
-            <span className="text-2xl font-bold text-white tracking-tight underline tracking-widest leading-none">
-              G<span className="text-blue-500">NXT</span> SYSTEMS
+            <span className="text-2xl font-black text-white tracking-tight underline tracking-widest leading-none">
+              PO <span className="text-blue-500">MANAGER</span>
             </span>
           </div>
           <h1 className="text-5xl font-extrabold text-white mb-6 leading-tight">
-            Advanced Enterprise <br />
-            <span className="text-blue-500">Resource Planning</span>
+            Streamlined Purchase <br />
+            <span className="text-blue-500">& Inventory System</span>
           </h1>
           <p className="text-slate-400 text-lg mb-8 leading-relaxed">
-            Experience the future of business management with our integrated ERP ecosystem. Secure, scalable, and intelligent.
+            Experience efficiency with PO Manager. A specialized ecosystem for requisitions, approvals, and procurement.
           </p>
           <div className="grid grid-cols-2 gap-6 pt-8 border-t border-slate-800">
             <div>
@@ -81,7 +81,7 @@ const LoginPage = () => {
               <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
                 <ShieldCheck className="text-white" size={24} />
               </div>
-              <span className="text-xl font-black text-slate-900 tracking-tighter">GNXT</span>
+              <span className="text-xl font-black text-slate-900 tracking-tighter uppercase">PO Manager</span>
             </div>
             <h2 className="text-3xl font-bold text-slate-900 mb-3 tracking-tight">Welcome Back</h2>
             <p className="text-slate-500">Please enter your details to sign in to your dashboard.</p>
@@ -157,7 +157,7 @@ const LoginPage = () => {
                 </>
               ) : (
                 <>
-                  Sign In to ERP
+                  Sign In to PO Manager
                   <LogIn size={20} className="group-hover:translate-x-1 transition-transform" />
                 </>
               )}

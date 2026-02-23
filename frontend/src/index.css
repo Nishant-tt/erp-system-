@@ -8,3 +8,22 @@ body {
   font-family: 'Outfit', sans-serif;
   @apply bg-slate-50 text-slate-900 antialiased;
 }
+
+/* Custom Sleek Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  @apply bg-slate-700/50 rounded-full hover:bg-slate-600 transition-colors;
+}
+
+/* Hide scrollbar for cleaner look when not hovered */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(71, 85, 105, 0.2) transparent;
+}

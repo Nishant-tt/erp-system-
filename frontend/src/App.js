@@ -4,6 +4,16 @@ import LoginPage from './pages/LoginPage/LoginPage';
 import ForgetPasswordPage from './pages/LoginPage/ForgetPasswordPage';
 import DashboardPage from './pages/Dashboard/DashboardPage';
 import ProfilePage from './pages/Profile/ProfilePage';
+import AdminDashboard from './pages/Admin/AdminDashboard';
+import UserManagement from './pages/Admin/UserManagement';
+import RoleManagement from './pages/Admin/RoleManagement';
+import DepartmentManagement from './pages/Admin/DepartmentManagement';
+import SupplierManagement from './pages/Admin/SupplierManagement';
+import PRManagement from './pages/PR/PRManagement';
+import RaisePR from './pages/PR/RaisePR';
+import PRDetails from './pages/PR/PRDetails';
+import ApprovalQueue from './pages/PR/ApprovalQueue';
+import Performance from './pages/Reports/Performance';
 import DashboardLayout from './components/Layout/DashboardLayout';
 
 function App() {
@@ -17,7 +27,22 @@ function App() {
         <Route element={<DashboardLayout />}>
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/profile" element={<ProfilePage />} />
-          {/* Add more dashboard routes here later, they will all render inside DashboardLayout */}
+
+          {/* Admin Suite */}
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/users" element={<UserManagement />} />
+          <Route path="/admin/roles" element={<RoleManagement />} />
+          <Route path="/admin/departments" element={<DepartmentManagement />} />
+          <Route path="/admin/suppliers" element={<SupplierManagement />} />
+
+          {/* Requisition Flow */}
+          <Route path="/prs" element={<PRManagement />} />
+          <Route path="/prs/create" element={<RaisePR />} />
+          <Route path="/prs/approvals" element={<ApprovalQueue />} />
+          <Route path="/prs/:id" element={<PRDetails />} />
+
+          {/* Reports & Analytics */}
+          <Route path="/performance" element={<Performance />} />
         </Route>
 
         <Route path="/" element={<Navigate to="/login" replace />} />
