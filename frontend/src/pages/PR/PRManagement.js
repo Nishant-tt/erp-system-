@@ -22,7 +22,7 @@ const PRManagement = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('ALL');
-    const userRole = sessionStorage.getItem('role');
+    const userRole = localStorage.getItem('role');
 
     useEffect(() => {
         fetchPRs();

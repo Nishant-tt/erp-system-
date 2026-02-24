@@ -9,6 +9,7 @@ import UserManagement from './pages/Admin/UserManagement';
 import RoleManagement from './pages/Admin/RoleManagement';
 import DepartmentManagement from './pages/Admin/DepartmentManagement';
 import SupplierManagement from './pages/Admin/SupplierManagement';
+import ItemMaster from './pages/Admin/ItemMaster';
 import PRManagement from './pages/PR/PRManagement';
 import RaisePR from './pages/PR/RaisePR';
 import PRDetails from './pages/PR/PRDetails';
@@ -34,6 +35,7 @@ function App() {
           <Route path="/admin/roles" element={<RoleManagement />} />
           <Route path="/admin/departments" element={<DepartmentManagement />} />
           <Route path="/admin/suppliers" element={<SupplierManagement />} />
+          <Route path="/admin/items" element={<ItemMaster />} />
 
           {/* Requisition Flow */}
           <Route path="/prs" element={<PRManagement />} />

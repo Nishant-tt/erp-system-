@@ -23,8 +23,8 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 
 
     const [expandedModule, setExpandedModule] = useState(null);
-    const userName = sessionStorage.getItem('userName') || 'Nishant';
-    const userRole = sessionStorage.getItem('role') || 'Super Admin';
+    const userName = localStorage.getItem('userName') || '';
+    const userRole = localStorage.getItem('role') || '';
 
     useEffect(() => {
         const fetchModules = async () => {
@@ -43,10 +43,10 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     const handleLogout = async () => {
         try {
             await logoutAPI();
-            sessionStorage.clear();
+            localStorage.clear();
             navigate('/login');
         } catch (error) {
-            sessionStorage.clear();
+            localStorage.clear();
             navigate('/login');
         }
     };
@@ -151,7 +151,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                         );
                     })
                 )}
-                <div className="pt-4 pb-2 px-3">
+                {/* <div className="pt-4 pb-2 px-3">
                     <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-3 mb-2">Procurement Flow</p>
                     <button
                         onClick={() => navigate('/prs')}
@@ -185,11 +185,11 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                         <LucideIcons.BarChart3 size={20} className={location.pathname === '/performance' ? 'text-white' : 'text-slate-400 group-hover/perf:text-white'} />
                         {isOpen && <span className="font-semibold text-sm tracking-wide flex-1 text-left">Performance</span>}
                     </button>
-                </div>
+                </div> */}
             </nav>
 
             <div className="px-3 pb-2 space-y-1">
-                {userRole === 'Admin' && (
+                {(userRole === 'Admin' || userRole === 'Super Admin') && (
                     <div className="space-y-1">
                         <button
                             onClick={() => toggleModule('admin-suite', '/admin')}
@@ -213,22 +213,25 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                         {isOpen && expandedModule === 'admin-suite' && (
                             <div className="ml-9 space-y-1 py-1">
                                 {[
-                                    { name: 'User Management', path: '/admin/users' },
-                                    { name: 'Roles & Permissions', path: '/admin/roles' },
-                                    { name: 'Departments', path: '/admin/departments' },
-                                    { name: 'Supplier Directory', path: '/admin/suppliers' },
-                                ].map((sub, idx) => (
-                                    <button
-                                        key={idx}
-                                        onClick={() => navigate(sub.path)}
-                                        className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${location.pathname === sub.path
-                                            ? 'text-blue-400 bg-blue-500/5'
-                                            : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800'
-                                            }`}
-                                    >
-                                        {sub.name}
-                                    </button>
-                                ))}
+                                    { name: 'User Management', path: '/admin/users', roles: ['Admin', 'Super Admin'] },
+                                    { name: 'Roles & Permissions', path: '/admin/roles', roles: ['Super Admin'] },
+                                    { name: 'Departments', path: '/admin/departments', roles: ['Super Admin'] },
+
+                                    { name: 'Supplier Directory', path: '/admin/suppliers', roles: ['Super Admin'] },
+                                    { name: 'Item Master', path: '/admin/items', roles: ['Super Admin'] },
+                                ].filter(item => item.roles.includes(userRole))
+                                    .map((sub, idx) => (
+                                        <button
+                                            key={idx}
+                                            onClick={() => navigate(sub.path)}
+                                            className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${location.pathname === sub.path
+                                                ? 'text-blue-400 bg-blue-500/5'
+                                                : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800'
+                                                }`}
+                                        >
+                                            {sub.name}
+                                        </button>
+                                    ))}
                             </div>
                         )}
                     </div>

@@ -1,35 +1,21 @@
-import axios from 'axios';
-
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+import axiosInstance from './axiosInstance';
 
 export const getSuppliersAPI = async () => {
-    const token = sessionStorage.getItem('token');
-    const response = await axios.get(`${API_URL}/api/suppliers`, {
-        headers: { Authorization: `Bearer ${token}` }
-    });
+    const response = await axiosInstance.get('/api/suppliers');
     return response.data;
 };
 
 export const createSupplierAPI = async (data) => {
-    const token = sessionStorage.getItem('token');
-    const response = await axios.post(`${API_URL}/api/suppliers`, data, {
-        headers: { Authorization: `Bearer ${token}` }
-    });
+    const response = await axiosInstance.post('/api/suppliers', data);
     return response.data;
 };
 
 export const updateSupplierAPI = async (id, data) => {
-    const token = sessionStorage.getItem('token');
-    const response = await axios.put(`${API_URL}/api/suppliers/${id}`, data, {
-        headers: { Authorization: `Bearer ${token}` }
-    });
+    const response = await axiosInstance.put(`/api/suppliers/${id}`, data);
     return response.data;
 };
 
 export const deleteSupplierAPI = async (id) => {
-    const token = sessionStorage.getItem('token');
-    const response = await axios.delete(`${API_URL}/api/suppliers/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-    });
+    const response = await axiosInstance.delete(`/api/suppliers/${id}`);
     return response.data;
 };

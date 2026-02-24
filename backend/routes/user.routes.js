@@ -25,23 +25,10 @@ const path = require("path");
  *       200:
  *         description: List of users
  */
-router.get("/", auth, role(["Admin"]), userCtrl.getUsers);
-
-/**
- * @swagger
- * /api/users:
- *   post:
- *     summary: Create new user
- *     tags: [Users]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: User created
- */
-router.post("/", auth, role(["Admin"]), userCtrl.createUser);
-router.put("/:id", auth, role(["Admin"]), userCtrl.updateUser);
-router.delete("/:id", auth, role(["Admin"]), userCtrl.deleteUser);
+router.get("/", auth, role(["Admin", "Super Admin"]), userCtrl.getUsers);
+router.post("/", auth, role(["Admin", "Super Admin"]), userCtrl.createUser);
+router.put("/:id", auth, role(["Admin", "Super Admin"]), userCtrl.updateUser);
+router.delete("/:id", auth, role(["Admin", "Super Admin"]), userCtrl.deleteUser);
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {

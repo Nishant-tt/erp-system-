@@ -10,12 +10,12 @@ const Footer = ({ isSidebarOpen }) => {
     const handleLogout = async () => {
         try {
             await logoutAPI();
-            sessionStorage.clear();
+            localStorage.clear();
             navigate('/login');
         } catch (error) {
             console.error('Logout error:', error);
             // Even if API fails, clear session and go to login
-            sessionStorage.clear();
+            localStorage.clear();
             navigate('/login');
         }
     };

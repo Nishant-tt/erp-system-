@@ -28,8 +28,8 @@ const PRDetails = () => {
     const [comments, setComments] = useState('');
     const [message, setMessage] = useState({ type: '', text: '' });
 
-    const userRole = sessionStorage.getItem('role');
-    const userId = sessionStorage.getItem('userId');
+    const userRole = localStorage.getItem('role');
+    const userId = localStorage.getItem('userId');
 
     useEffect(() => {
         fetchPRDetails();

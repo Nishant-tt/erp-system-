@@ -86,7 +86,7 @@ const Header = ({ toggleSidebar, isSidebarOpen }) => {
                 <div className="flex items-center gap-3 pl-2">
                     <div className="text-right hidden sm:block">
                         <p className="text-xs font-bold text-slate-900 leading-none mb-1">
-                            {sessionStorage.getItem('userName') || ''}
+                            {localStorage.getItem('userName') || ''}
                         </p>
                         <p className="text-[10px] font-bold text-green-500 flex items-center justify-end gap-1">
                             <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
@@ -94,7 +94,7 @@ const Header = ({ toggleSidebar, isSidebarOpen }) => {
                         </p>
                     </div>
                     <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-lg shadow-blue-500/30 ring-2 ring-white">
-                        {(sessionStorage.getItem('userName') || '').charAt(0)}
+                        {(localStorage.getItem('userName') || '').charAt(0)}
                     </div>
                 </div>
 

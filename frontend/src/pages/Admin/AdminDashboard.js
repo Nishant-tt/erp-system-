@@ -11,7 +11,8 @@ import {
     Lock,
     Settings,
     UserPlus,
-    Truck
+    Truck,
+    BoxIcon
 } from 'lucide-react';
 
 const AdminDashboard = () => {
@@ -69,6 +70,13 @@ const AdminDashboard = () => {
             icon: <Truck className="text-orange-600" size={24} />,
             path: "/admin/suppliers",
             color: "bg-orange-50"
+        },
+        {
+            title: "Item Master",
+            description: "Manage product catalog, inventory attributes, and pricing.",
+            icon: <BoxIcon className="text-purple-600" size={24} />,
+            path: "/admin/items",
+            color: "bg-purple-50"
         }
     ];
 

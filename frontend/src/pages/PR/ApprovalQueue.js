@@ -20,7 +20,7 @@ const ApprovalQueue = () => {
     const [prs, setPrs] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
-    const userRole = sessionStorage.getItem('role');
+    const userRole = localStorage.getItem('role');
 
     useEffect(() => {
         if (userRole !== 'Admin' && userRole !== 'Manager') {

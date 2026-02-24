@@ -19,6 +19,7 @@ app.use("/api/roles", require("./routes/role.routes"));
 app.use("/api/modules", require("./routes/module.routes"));
 app.use("/api/org", require("./routes/org.routes"));
 app.use("/api/suppliers", require("./routes/supplier.routes"));
+app.use("/api/items", require("./routes/itemMaster.routes"));
 app.use("/api/prs", require("./routes/pr.routes"));
 
 

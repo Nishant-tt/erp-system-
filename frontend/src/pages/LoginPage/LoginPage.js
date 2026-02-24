@@ -12,6 +12,12 @@ const LoginPage = () => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
+  React.useEffect(() => {
+    if (localStorage.getItem('token')) {
+      navigate('/dashboard');
+    }
+  }, [navigate]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -20,13 +26,14 @@ const LoginPage = () => {
     try {
       const data = await loginAPI(email, password);
 
-      // Store auth data in sessionStorage
-      sessionStorage.setItem('token', data.token);
-      sessionStorage.setItem('userId', data.user._id);
-      sessionStorage.setItem('userName', data.user.name);
-      sessionStorage.setItem('role', data.user.role.name);
+      // Store auth data in localStorage
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('userId', data.user._id);
+      localStorage.setItem('userName', data.user.name);
+      localStorage.setItem('role', data.user.role.name);
+      localStorage.setItem('departmentId', data.user.department?._id || data.user.department || '');
 
-      console.log('Login successful:', data.user.role.name);
+      // console.log('Login successful:', data.user.role.name);
       navigate('/dashboard');
     } catch (err) {
       setError(err.message || 'Authentication failed. Please check your credentials.');

@@ -29,18 +29,18 @@ const prSchema = new mongoose.Schema(
 );
 
 // Auto-generate PR Number (e.g., PR-2024-001)
-prSchema.pre("save", async function (next) {
+prSchema.pre("save", async function () {
     if (!this.prNumber) {
         const date = new Date();
         const year = date.getFullYear();
-        const count = await mongoose.model("PR").countDocuments();
+        // Use this.constructor for better model access in hooks
+        const count = await this.constructor.countDocuments();
         this.prNumber = `PR-${year}-${(count + 1).toString().padStart(3, '0')}`;
     }
 
-    // Recalculate totalAmount from items
-    this.totalAmount = this.items.reduce((sum, item) => sum + (item.quantity * item.estimatedUnitCost), 0);
-
-    next();
+    // Recalculate totalAmount from items with 18% GST
+    const subtotal = this.items.reduce((sum, item) => sum + (item.quantity * item.estimatedUnitCost), 0);
+    this.totalAmount = subtotal * 1.18;
 });
 
 module.exports = mongoose.model("PR", prSchema);

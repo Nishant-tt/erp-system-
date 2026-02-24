@@ -59,6 +59,9 @@ const UserManagement = () => {
         }
     };
 
+    const userRole = localStorage.getItem('role') || '';
+    const userDeptId = localStorage.getItem('departmentId') || '';
+
     const handleOpenModal = (user = null) => {
         if (user) {
             setEditingUser(user);
@@ -72,7 +75,14 @@ const UserManagement = () => {
             });
         } else {
             setEditingUser(null);
-            setFormData({ name: '', email: '', password: '', role: '', department: '', status: 'ACTIVE' });
+            setFormData({
+                name: '',
+                email: '',
+                password: '',
+                role: '',
+                department: userRole === 'Admin' ? userDeptId : '',
+                status: 'ACTIVE'
+            });
         }
         setShowModal(true);
     };
@@ -315,7 +325,15 @@ const UserManagement = () => {
                                             onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                                         >
                                             <option value="">Select Role</option>
-                                            {roles.map(r => <option key={r._id} value={r._id}>{r.name}</option>)}
+                                            {roles
+                                                .filter(r => {
+                                                    // Admins cannot create Admins or Super Admins
+                                                    if (userRole === 'Admin') {
+                                                        return r.name !== 'Admin' && r.name !== 'Super Admin';
+                                                    }
+                                                    return true;
+                                                })
+                                                .map(r => <option key={r._id} value={r._id}>{r.name}</option>)}
                                         </select>
                                     </div>
                                 </div>
@@ -332,7 +350,15 @@ const UserManagement = () => {
                                             onChange={(e) => setFormData({ ...formData, department: e.target.value })}
                                         >
                                             <option value="">Select Dept</option>
-                                            {departments.map(d => <option key={d._id} value={d._id}>{d.name}</option>)}
+                                            {departments
+                                                .filter(d => {
+                                                    // Admins can only select their own department
+                                                    if (userRole === 'Admin') {
+                                                        return d._id === userDeptId;
+                                                    }
+                                                    return true;
+                                                })
+                                                .map(d => <option key={d._id} value={d._id}>{d.name}</option>)}
                                         </select>
                                     </div>
                                 </div>

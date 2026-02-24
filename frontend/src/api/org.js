@@ -1,51 +1,31 @@
-import axios from 'axios';
-
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+import axiosInstance from './axiosInstance';
 
 export const getDepartmentsAPI = async () => {
-    const token = sessionStorage.getItem('token');
-    const response = await axios.get(`${API_URL}/api/org/departments`, {
-        headers: { Authorization: `Bearer ${token}` }
-    });
+    const response = await axiosInstance.get('/api/org/departments');
     return response.data;
 };
 
 export const getTeamsAPI = async () => {
-    const token = sessionStorage.getItem('token');
-    const response = await axios.get(`${API_URL}/api/org/teams`, {
-        headers: { Authorization: `Bearer ${token}` }
-    });
+    const response = await axiosInstance.get('/api/org/teams');
     return response.data;
 };
 
 export const createDepartmentAPI = async (data) => {
-    const token = sessionStorage.getItem('token');
-    const response = await axios.post(`${API_URL}/api/org/departments`, data, {
-        headers: { Authorization: `Bearer ${token}` }
-    });
+    const response = await axiosInstance.post('/api/org/departments', data);
     return response.data;
 };
 
 export const createTeamAPI = async (data) => {
-    const token = sessionStorage.getItem('token');
-    const response = await axios.post(`${API_URL}/api/org/teams`, data, {
-        headers: { Authorization: `Bearer ${token}` }
-    });
+    const response = await axiosInstance.post('/api/org/teams', data);
     return response.data;
 };
 
 export const updateDepartmentAPI = async (id, data) => {
-    const token = sessionStorage.getItem('token');
-    const response = await axios.put(`${API_URL}/api/org/departments/${id}`, data, {
-        headers: { Authorization: `Bearer ${token}` }
-    });
+    const response = await axiosInstance.put(`/api/org/departments/${id}`, data);
     return response.data;
 };
 
 export const deleteDepartmentAPI = async (id) => {
-    const token = sessionStorage.getItem('token');
-    const response = await axios.delete(`${API_URL}/api/org/departments/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-    });
+    const response = await axiosInstance.delete(`/api/org/departments/${id}`);
     return response.data;
 };

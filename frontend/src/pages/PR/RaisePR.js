@@ -67,7 +67,12 @@ const RaisePR = () => {
 
     const handleSubmit = async (status = 'DRAFT') => {
         // Validation
-        const validItems = items.filter(item => item.description.trim() !== '' && item.quantity > 0 && item.estimatedUnitCost > 0);
+        const validItems = items.filter(item => item.description.trim() !== '' && item.quantity > 0 && item.estimatedUnitCost > 0)
+            .map(item => ({
+                ...item,
+                totalCost: item.quantity * item.estimatedUnitCost
+            }));
+
         if (validItems.length === 0) {
             setMessage({ type: 'error', text: 'Please add at least one valid item.' });
             return;
@@ -76,10 +81,13 @@ const RaisePR = () => {
         setIsSubmitting(true);
         setMessage({ type: '', text: '' });
 
+        const totalAmount = validItems.reduce((sum, item) => sum + item.totalCost, 0) * 1.18;
+
         try {
             await createPRAPI({
                 items: validItems,
-                status: status
+                status: status,
+                totalAmount: totalAmount
             });
             setMessage({ type: 'success', text: status === 'DRAFT' ? 'Requisition saved as draft!' : 'Requisition submitted for approval!' });
             setTimeout(() => navigate('/prs'), 1500);

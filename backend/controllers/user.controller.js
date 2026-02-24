@@ -12,16 +12,27 @@ const bcrypt = require("bcrypt");
  *         description: Success
  */
 exports.getUsers = async (req, res) => {
-  const users = await User.find().populate("role").populate("department");
+  let query = {};
+
+  // Super Admin sees all users
+  // Admin (Module Admin) only sees users in their department
+  if (req.user.role === 'Admin') {
+    query = { department: req.user.department };
+  } else if (req.user.role !== 'Super Admin') {
+    // Other roles shouldn't really be calling this, but safety first
+    query = { _id: req.user.id };
+  }
+
+  const users = await User.find(query).populate("role").populate("department");
   res.json(users);
 };
 
 exports.createUser = async (req, res) => {
   try {
-    const userData = { ...req.body };
-    if (!userData.role) delete userData.role;
-    if (!userData.department) delete userData.department;
-    if (!userData.team) delete userData.team;
+    // Module Admin can only create users in their own department
+    if (req.user.role === 'Admin') {
+      userData.department = req.user.department;
+    }
 
     const user = await User.create(userData);
     res.status(201).json(user);
@@ -50,8 +61,13 @@ exports.updateUser = async (req, res) => {
       delete userData.password;
     }
 
-    const user = await User.findByIdAndUpdate(req.params.id, userData, { new: true }).populate("role").populate("department");
-    if (!user) return res.status(404).json({ message: "User not found" });
+    const query = { _id: req.params.id };
+    if (req.user.role === 'Admin') {
+      query.department = req.user.department;
+    }
+
+    const user = await User.findOneAndUpdate(query, userData, { new: true }).populate("role").populate("department");
+    if (!user) return res.status(404).json({ message: "User not found or access denied" });
     res.json(user);
   } catch (error) {
     res.status(400).json({ message: "Error updating user", error: error.message });
@@ -60,8 +76,13 @@ exports.updateUser = async (req, res) => {
 
 exports.deleteUser = async (req, res) => {
   try {
-    const user = await User.findByIdAndDelete(req.params.id);
-    if (!user) return res.status(404).json({ message: "User not found" });
+    const query = { _id: req.params.id };
+    if (req.user.role === 'Admin') {
+      query.department = req.user.department;
+    }
+
+    const user = await User.findOneAndDelete(query);
+    if (!user) return res.status(404).json({ message: "User not found or access denied" });
     res.json({ message: "User deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: "Error deleting user", error: error.message });

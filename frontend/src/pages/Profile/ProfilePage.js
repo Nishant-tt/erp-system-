@@ -43,7 +43,7 @@ const ProfilePage = () => {
             setProfile(updatedProfile);
             setMessage({ type: 'success', text: 'Profile picture updated!' });
             // Update session storage for immediate UI update in sidebar/header if needed
-            sessionStorage.setItem('userName', updatedProfile.name);
+            localStorage.setItem('userName', updatedProfile.name);
         } catch (error) {
             setMessage({ type: 'error', text: 'Failed to upload image.' });
         } finally {
