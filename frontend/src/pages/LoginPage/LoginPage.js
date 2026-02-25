@@ -1,30 +1,65 @@
-import React, { useState } from 'react';
-import { Mail, Lock, LogIn, Eye, EyeOff, Loader2, ShieldCheck } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Mail, Lock, LogIn, Eye, EyeOff, Loader2, ShieldCheck, Calendar } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 
 import { loginAPI } from '../../api/auth';
+import { getFinancialYearsAPI } from '../../api/financialYear';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [financialYears, setFinancialYears] = useState([]);
+  const [selectedFY, setSelectedFY] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isPageLoading, setIsPageLoading] = useState(true);
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  React.useEffect(() => {
+  useEffect(() => {
+    // Redirect if already logged in
     if (localStorage.getItem('token')) {
       navigate('/dashboard');
     }
+    fetchFYs();
   }, [navigate]);
+
+  const fetchFYs = async () => {
+    try {
+      setIsPageLoading(true);
+      const data = await getFinancialYearsAPI();
+      setFinancialYears(data);
+
+      // Auto-select the active financial year
+      const activeFY = data.find(fy => fy.isActive);
+      if (activeFY) {
+        setSelectedFY(activeFY._id);
+      } else if (data.length > 0) {
+        // Fallback to first one if none are marked active
+        setSelectedFY(data[0]._id);
+      }
+    } catch (err) {
+      console.error('Failed to load financial years:', err);
+      // We don't block the page, but let users know
+      setError('System settings could not be loaded. Please refresh.');
+    } finally {
+      setIsPageLoading(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!selectedFY) {
+      setError('Please select a financial year.');
+      return;
+    }
+
     setIsLoading(true);
     setError('');
 
     try {
-      const data = await loginAPI(email, password);
+      const data = await loginAPI(email, password, selectedFY);
 
       // Store auth data in localStorage
       localStorage.setItem('token', data.token);
@@ -33,7 +68,11 @@ const LoginPage = () => {
       localStorage.setItem('role', data.user.role.name);
       localStorage.setItem('departmentId', data.user.department?._id || data.user.department || '');
 
-      // console.log('Login successful:', data.user.role.name);
+      // Store the active financial year context
+      if (data.financialYear) {
+        localStorage.setItem('activeFY', JSON.stringify(data.financialYear));
+      }
+
       navigate('/dashboard');
     } catch (err) {
       setError(err.message || 'Authentication failed. Please check your credentials.');
@@ -43,7 +82,7 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex font-sans">
+    <div className="h-screen bg-[#F8FAFC] flex font-sans overflow-hidden">
       {/* Left Side - Visual/Marketing (Hidden on mobile) */}
       <div className="hidden lg:flex lg:w-1/2 bg-[#0F172A] relative overflow-hidden items-center justify-center p-12">
         <div className="absolute top-0 left-0 w-full h-full opacity-20">
@@ -81,7 +120,7 @@ const LoginPage = () => {
       </div>
 
       {/* Right Side - Login Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-white lg:bg-[#F8FAFC]">
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-white lg:bg-[#F8FAFC] overflow-y-auto">
         <div className="w-full max-w-[420px]">
           <div className="mb-10">
             <div className="lg:hidden flex items-center gap-2 mb-8">
@@ -111,12 +150,41 @@ const LoginPage = () => {
                 <input
                   type="email"
                   placeholder="name@company.com"
-                  className="w-full pl-12 pr-4 py-3.5 bg-white border border-slate-200 rounded-xl outline-none transition-all focus:border-blue-600 focus:ring-4 focus:ring-blue-500/5 placeholder:text-slate-400"
+                  className="w-full pl-12 pr-4 py-3.5 bg-white border border-slate-200 rounded-xl outline-none transition-all focus:border-blue-600 focus:ring-4 focus:ring-blue-500/5 placeholder:text-slate-400 font-medium"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  disabled={isLoading}
+                  disabled={isLoading || isPageLoading}
                 />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-slate-700 tracking-wide">Financial Year</label>
+              <div className="relative group">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors pointer-events-none">
+                  <Calendar size={18} />
+                </div>
+                <select
+                  className="w-full pl-12 pr-4 py-3.5 bg-white border border-slate-200 rounded-xl outline-none transition-all focus:border-blue-600 focus:ring-4 focus:ring-blue-500/5 appearance-none font-bold text-slate-700"
+                  value={selectedFY}
+                  onChange={(e) => setSelectedFY(e.target.value)}
+                  required
+                  disabled={isLoading || isPageLoading}
+                >
+                  {isPageLoading ? (
+                    <option>Loading years...</option>
+                  ) : (
+                    financialYears.map((fy) => (
+                      <option key={fy._id} value={fy._id}>
+                        {fy.name} {fy.isActive ? '(Current)' : ''}
+                      </option>
+                    ))
+                  )}
+                </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                  {isPageLoading ? <Loader2 size={16} className="animate-spin" /> : null}
+                </div>
               </div>
             </div>
 
@@ -135,27 +203,29 @@ const LoginPage = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  disabled={isLoading}
+                  disabled={isLoading || isPageLoading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
-                  disabled={isLoading}
+                  disabled={isLoading || isPageLoading}
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
             </div>
+
             <div className="text-right">
               <Link to="/forgot-password" size="sm" className="text-sm font-bold text-blue-600 hover:text-blue-700 hover:underline transition-colors">
                 Forgot Password
               </Link>
             </div>
+
             <button
               type="submit"
               className="w-full py-4 bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-bold rounded-xl shadow-xl shadow-blue-600/20 transition-all active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100 flex items-center justify-center gap-3 group"
-              disabled={isLoading}
+              disabled={isLoading || isPageLoading}
             >
               {isLoading ? (
                 <>

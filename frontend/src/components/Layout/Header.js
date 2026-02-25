@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { getModulesAPI } from '../../api/modules';
-import { Search, Bell, HelpCircle, Menu, LayoutDashboard, ChevronRight } from 'lucide-react';
+import { Search, Bell, HelpCircle, Menu, LayoutDashboard, ChevronRight, Calendar } from 'lucide-react';
 
 const Header = ({ toggleSidebar, isSidebarOpen }) => {
     const [modules, setModules] = useState([]);
@@ -78,6 +78,14 @@ const Header = ({ toggleSidebar, isSidebarOpen }) => {
             </div>
 
             <div className="flex items-center gap-2">
+                {localStorage.getItem('activeFY') && (
+                    <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-orange-50 border border-orange-100 rounded-lg text-orange-700 mx-2">
+                        <Calendar size={14} className="text-orange-500" />
+                        <span className="text-[10px] font-black uppercase tracking-widest leading-none">
+                            {JSON.parse(localStorage.getItem('activeFY')).name}
+                        </span>
+                    </div>
+                )}
                 <button className="relative p-2 text-slate-500 hover:bg-slate-100 rounded-lg transition-colors group">
                     <Bell size={20} className="group-hover:scale-110 transition-transform" />
                     <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { TrendingUp, Users, ShoppingBag, IndianRupee, ArrowUpRight, ArrowDownRight, MoreHorizontal, Plus } from 'lucide-react';
 
 
@@ -26,6 +27,7 @@ const StatCard = ({ icon, label, value, trend, isPositive, colorClass }) => (
 );
 
 const DashboardPage = () => {
+    const navigate = useNavigate();
     const stats = [
         { icon: <ShoppingBag size={22} />, label: 'Pending PRs', value: '12', trend: '8%', isPositive: false, colorClass: 'bg-amber-50 text-amber-600' },
         { icon: <IndianRupee size={22} />, label: 'Approved Value', value: '₹12.4L', trend: '15%', isPositive: true, colorClass: 'bg-emerald-50 text-emerald-600' },
@@ -60,20 +62,46 @@ const DashboardPage = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Left Column: Quick Actions & Chart */}
                 <div className="lg:col-span-2 space-y-8">
-                    <div className="grid grid-cols-2 gap-4">
-                        <button className="bg-primary p-6 rounded-[32px] text-white text-left group hover:shadow-xl hover:shadow-primary/20 transition-all">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <button
+                            onClick={() => navigate('/prs/create')}
+                            className="bg-primary p-6 rounded-[32px] text-white text-left group hover:shadow-xl hover:shadow-primary/20 transition-all"
+                        >
                             <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                                 <Plus size={20} />
                             </div>
-                            <h4 className="font-black text-sm uppercase tracking-widest mb-1">Raise Requisition</h4>
-                            <p className="text-[10px] opacity-60 font-medium uppercase tracking-widest leading-relaxed">Initiate a new purchase request for your unit.</p>
+                            <h4 className="font-black text-[10px] uppercase tracking-widest mb-1">Raise PR</h4>
+                            <p className="text-[8px] opacity-60 font-medium uppercase tracking-widest leading-relaxed">New Requisition</p>
                         </button>
-                        <button className="bg-slate-900 p-6 rounded-[32px] text-white text-left group hover:shadow-xl transition-all">
-                            <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <button
+                            onClick={() => navigate('/grns/create')}
+                            className="bg-emerald-600 p-6 rounded-[32px] text-white text-left group hover:shadow-xl hover:shadow-emerald-600/20 transition-all font-bold"
+                        >
+                            <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform font-bold">
+                                <ShoppingBag size={20} />
+                            </div>
+                            <h4 className="font-black text-[10px] uppercase tracking-widest mb-1 font-bold">Inward Goods</h4>
+                            <p className="text-[8px] opacity-60 font-medium uppercase tracking-widest leading-relaxed font-bold">Process GRN</p>
+                        </button>
+                        <button
+                            onClick={() => navigate('/invoices/create')}
+                            className="bg-amber-500 p-6 rounded-[32px] text-white text-left group hover:shadow-xl hover:shadow-amber-500/20 transition-all font-bold"
+                        >
+                            <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform font-bold">
+                                <TrendingUp size={20} />
+                            </div>
+                            <h4 className="font-black text-[10px] uppercase tracking-widest mb-1">Book Bill</h4>
+                            <p className="text-[8px] opacity-60 font-medium uppercase tracking-widest leading-relaxed">Book Invoice</p>
+                        </button>
+                        <button
+                            onClick={() => navigate('/payments/process')}
+                            className="bg-slate-900 p-6 rounded-[32px] text-white text-left group hover:shadow-xl transition-all font-bold"
+                        >
+                            <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform font-bold">
                                 <Users size={20} />
                             </div>
-                            <h4 className="font-black text-sm uppercase tracking-widest mb-1">Vendor Master</h4>
-                            <p className="text-[10px] opacity-40 font-medium uppercase tracking-widest leading-relaxed">Access the decentralized supplier directory.</p>
+                            <h4 className="font-black text-[10px] uppercase tracking-widest mb-1 font-bold">Disburse</h4>
+                            <p className="text-[8px] opacity-40 font-medium uppercase tracking-widest leading-relaxed font-bold">Pay Vendor</p>
                         </button>
                     </div>
 

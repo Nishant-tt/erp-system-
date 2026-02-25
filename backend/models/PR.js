@@ -1,7 +1,8 @@
 const mongoose = require("mongoose");
 
 const prItemSchema = new mongoose.Schema({
-    description: { type: String, required: true },
+    item: { type: mongoose.Schema.Types.ObjectId, ref: "ItemMaster", required: true },
+    description: { type: String, default: "" },
     quantity: { type: Number, required: true, min: 1 },
     unit: { type: String, default: "pcs" },
     estimatedUnitCost: { type: Number, required: true, min: 0 },

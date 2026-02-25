@@ -4,8 +4,14 @@ const { hashPassword, comparePassword } = require("../utils/hash");
 const { generateToken } = require("../utils/jwt");
 const config = require("../config/config");
 
+const FinancialYear = require("../models/FinancialYear");
+
 exports.login = async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, financialYearId } = req.body;
+
+  if (!financialYearId) {
+    return res.status(400).json({ message: "Please select a financial year" });
+  }
 
   const user = await User.findOne({ email }).populate("role");
   if (!user) return res.status(400).json({ message: "User not found" });
@@ -13,13 +19,32 @@ exports.login = async (req, res) => {
   const isMatch = await comparePassword(password, user.password);
   if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
 
+  const selectedFY = await FinancialYear.findById(financialYearId);
+  if (!selectedFY) return res.status(404).json({ message: "Financial Year not found" });
+
+  // Only Super Admin can login into inactive financial years
+  if (!selectedFY.isActive && user.role.name !== 'Super Admin') {
+    return res.status(403).json({
+      message: "Access Denied: Only Super Admins can login to a closed/previous financial year."
+    });
+  }
+
   const token = generateToken({
     id: user._id,
     role: user.role.name,
     department: user.department,
+    financialYear: selectedFY._id
   });
 
-  res.json({ token, user });
+  res.json({
+    token,
+    user,
+    financialYear: {
+      id: selectedFY._id,
+      name: selectedFY.name,
+      code: selectedFY.code
+    }
+  });
 };
 
 exports.logout = async (req, res) => {

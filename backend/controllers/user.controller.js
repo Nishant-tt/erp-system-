@@ -29,6 +29,14 @@ exports.getUsers = async (req, res) => {
 
 exports.createUser = async (req, res) => {
   try {
+    const userData = { ...req.body };
+
+    // Hash password if provided
+    if (userData.password) {
+      const salt = await bcrypt.genSalt(10);
+      userData.password = await bcrypt.hash(userData.password, salt);
+    }
+
     // Module Admin can only create users in their own department
     if (req.user.role === 'Admin') {
       userData.department = req.user.department;

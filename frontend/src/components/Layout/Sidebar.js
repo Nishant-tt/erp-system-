@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import * as LucideIcons from 'lucide-react';
 import {
     ShieldCheck,
+    Truck,
     LogOut,
     ChevronRight,
     ChevronLeft,
@@ -151,41 +152,163 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                         );
                     })
                 )}
-                {/* <div className="pt-4 pb-2 px-3">
-                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-3 mb-2">Procurement Flow</p>
+                <div className="pt-4 pb-2 px-3 border-t border-slate-800/30">
+                    <p className={`text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-3 mb-2 transition-opacity duration-300 ${!isOpen && 'opacity-0'}`}>Procurement Lifecycle</p>
+
+                    {/* Requisitions */}
                     <button
                         onClick={() => navigate('/prs')}
-                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group/pr ${location.pathname === '/prs'
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group/pr ${location.pathname.startsWith('/prs')
                             ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
                             : 'text-slate-400 hover:bg-slate-800 hover:text-white'
                             } ${!isOpen && 'justify-center px-1'}`}
                     >
-                        <ClipboardList size={20} className={location.pathname === '/prs' ? 'text-white' : 'text-slate-400 group-hover/pr:text-white'} />
-                        {isOpen && <span className="font-semibold text-sm tracking-wide flex-1 text-left">My PRs</span>}
+                        <ClipboardList size={20} className={location.pathname.startsWith('/prs') ? 'text-white' : 'text-slate-400 group-hover/pr:text-white'} />
+                        {isOpen && <span className="font-semibold text-sm tracking-wide flex-1 text-left">Purchase Requisitions</span>}
                     </button>
-                    {(userRole === 'Admin' || userRole === 'Manager') && (
-                        <button
-                            onClick={() => navigate('/prs/approvals')}
-                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group/approval ${location.pathname === '/prs/approvals'
-                                ? 'bg-amber-600 text-white shadow-lg shadow-amber-500/20'
-                                : 'text-slate-400 hover:bg-slate-800 hover:text-white'
-                                } ${!isOpen && 'justify-center px-1'}`}
-                        >
-                            <LucideIcons.CheckCircle size={20} className={location.pathname === '/prs/approvals' ? 'text-white' : 'text-slate-400 group-hover/approval:text-white'} />
-                            {isOpen && <span className="font-semibold text-sm tracking-wide flex-1 text-left">Approval Queue</span>}
-                        </button>
-                    )}
+
+                    {/* Purchase Orders */}
                     <button
-                        onClick={() => navigate('/performance')}
-                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group/perf ${location.pathname === '/performance'
+                        onClick={() => navigate('/purchase-orders')}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group/po ${location.pathname.startsWith('/purchase-orders')
                             ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20'
                             : 'text-slate-400 hover:bg-slate-800 hover:text-white'
                             } ${!isOpen && 'justify-center px-1'}`}
                     >
-                        <LucideIcons.BarChart3 size={20} className={location.pathname === '/performance' ? 'text-white' : 'text-slate-400 group-hover/perf:text-white'} />
+                        <LucideIcons.FileText size={20} className={location.pathname.startsWith('/purchase-orders') ? 'text-white' : 'text-slate-400 group-hover/po:text-white'} />
+                        {isOpen && <span className="font-semibold text-sm tracking-wide flex-1 text-left">Purchase Orders</span>}
+                    </button>
+
+                    {/* GRNs */}
+                    <button
+                        onClick={() => navigate('/grns')}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group/grn ${location.pathname.startsWith('/grns')
+                            ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/20'
+                            : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                            } ${!isOpen && 'justify-center px-1'}`}
+                    >
+                        <Truck size={20} className={location.pathname.startsWith('/grns') ? 'text-white' : 'text-slate-400 group-hover/grn:text-white'} />
+                        {isOpen && <span className="font-semibold text-sm tracking-wide flex-1 text-left">Goods Receipt (GRN)</span>}
+                    </button>
+
+                    {/* Invoices */}
+                    <button
+                        onClick={() => navigate('/invoices')}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group/inv ${location.pathname.startsWith('/invoices')
+                            ? 'bg-amber-600 text-white shadow-lg shadow-amber-500/20'
+                            : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                            } ${!isOpen && 'justify-center px-1'}`}
+                    >
+                        <LucideIcons.Receipt size={20} className={location.pathname.startsWith('/invoices') ? 'text-white' : 'text-slate-400 group-hover/inv:text-white'} />
+                        {isOpen && <span className="font-semibold text-sm tracking-wide flex-1 text-left">Purchase Invoices</span>}
+                    </button>
+
+                    {/* Payments */}
+                    <button
+                        onClick={() => navigate('/payments')}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group/pay ${location.pathname.startsWith('/payments')
+                            ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/20'
+                            : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                            } ${!isOpen && 'justify-center px-1'}`}
+                    >
+                        <LucideIcons.CreditCard size={20} className={location.pathname.startsWith('/payments') ? 'text-white' : 'text-slate-400 group-hover/pay:text-white'} />
+                        {isOpen && <span className="font-semibold text-sm tracking-wide flex-1 text-left">Vendor Payments</span>}
+                    </button>
+                </div>
+
+                <div className="pt-4 pb-2 px-3 border-t border-slate-800/30">
+                    <p className={`text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-3 mb-2 transition-opacity duration-300 ${!isOpen && 'opacity-0'}`}>Sales & CRM Lifecycle</p>
+
+                    {/* CRM Section */}
+                    <button
+                        onClick={() => navigate('/leads')}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group/lead ${location.pathname.startsWith('/leads')
+                            ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
+                            : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                            } ${!isOpen && 'justify-center px-1'}`}
+                    >
+                        <LucideIcons.Users size={20} className={location.pathname.startsWith('/leads') ? 'text-white' : 'text-slate-400 group-hover/lead:text-white'} />
+                        {isOpen && <span className="font-semibold text-sm tracking-wide flex-1 text-left">Leads</span>}
+                    </button>
+
+                    <button
+                        onClick={() => navigate('/opportunities')}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group/opp ${location.pathname.startsWith('/opportunities')
+                            ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20'
+                            : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                            } ${!isOpen && 'justify-center px-1'}`}
+                    >
+                        <LucideIcons.Target size={20} className={location.pathname.startsWith('/opportunities') ? 'text-white' : 'text-slate-400 group-hover/opp:text-white'} />
+                        {isOpen && <span className="font-semibold text-sm tracking-wide flex-1 text-left">Pipeline</span>}
+                    </button>
+
+                    {/* Sales Section */}
+                    <button
+                        onClick={() => navigate('/quotations')}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group/quote ${location.pathname.startsWith('/quotations')
+                            ? 'bg-amber-600 text-white shadow-lg shadow-amber-500/20'
+                            : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                            } ${!isOpen && 'justify-center px-1'}`}
+                    >
+                        <LucideIcons.FileText size={20} className={location.pathname.startsWith('/quotations') ? 'text-white' : 'text-slate-400 group-hover/quote:text-white'} />
+                        {isOpen && <span className="font-semibold text-sm tracking-wide flex-1 text-left">Quotations</span>}
+                    </button>
+
+                    <button
+                        onClick={() => navigate('/sales-orders')}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group/so ${location.pathname.startsWith('/sales-orders')
+                            ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/20'
+                            : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                            } ${!isOpen && 'justify-center px-1'}`}
+                    >
+                        <LucideIcons.ShoppingBag size={20} className={location.pathname.startsWith('/sales-orders') ? 'text-white' : 'text-slate-400 group-hover/so:text-white'} />
+                        {isOpen && <span className="font-semibold text-sm tracking-wide flex-1 text-left">Sales Orders</span>}
+                    </button>
+
+                    <button
+                        onClick={() => navigate('/delivery-notes')}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group/dn ${location.pathname.startsWith('/delivery-notes')
+                            ? 'bg-sky-600 text-white shadow-lg shadow-sky-500/20'
+                            : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                            } ${!isOpen && 'justify-center px-1'}`}
+                    >
+                        <Truck size={20} className={location.pathname.startsWith('/delivery-notes') ? 'text-white' : 'text-slate-400 group-hover/dn:text-white'} />
+                        {isOpen && <span className="font-semibold text-sm tracking-wide flex-1 text-left">Deliveries</span>}
+                    </button>
+
+                    <button
+                        onClick={() => navigate('/sales-invoices')}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group/sinv ${location.pathname.startsWith('/sales-invoices')
+                            ? 'bg-rose-600 text-white shadow-lg shadow-rose-500/20'
+                            : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                            } ${!isOpen && 'justify-center px-1'}`}
+                    >
+                        <LucideIcons.Receipt size={20} className={location.pathname.startsWith('/sales-invoices') ? 'text-white' : 'text-slate-400 group-hover/sinv:text-white'} />
+                        {isOpen && <span className="font-semibold text-sm tracking-wide flex-1 text-left">Sales Invoices</span>}
+                    </button>
+
+                    <button
+                        onClick={() => navigate('/customer-payments')}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group/cpay ${location.pathname.startsWith('/customer-payments')
+                            ? 'bg-violet-600 text-white shadow-lg shadow-violet-500/20'
+                            : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                            } ${!isOpen && 'justify-center px-1'}`}
+                    >
+                        <LucideIcons.CreditCard size={20} className={location.pathname.startsWith('/customer-payments') ? 'text-white' : 'text-slate-400 group-hover/cpay:text-white'} />
+                        {isOpen && <span className="font-semibold text-sm tracking-wide flex-1 text-left">Collections</span>}
+                    </button>
+
+                    <button
+                        onClick={() => navigate('/sales-analytics')}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group/analysis ${location.pathname.startsWith('/sales-analytics')
+                            ? 'bg-orange-600 text-white shadow-lg shadow-orange-500/20'
+                            : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                            } ${!isOpen && 'justify-center px-1'}`}
+                    >
+                        <LucideIcons.BarChart3 size={20} className={location.pathname.startsWith('/sales-analytics') ? 'text-white' : 'text-slate-400 group-hover/analysis:text-white'} />
                         {isOpen && <span className="font-semibold text-sm tracking-wide flex-1 text-left">Performance</span>}
                     </button>
-                </div> */}
+                </div>
             </nav>
 
             <div className="px-3 pb-2 space-y-1">
@@ -213,11 +336,14 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                         {isOpen && expandedModule === 'admin-suite' && (
                             <div className="ml-9 space-y-1 py-1">
                                 {[
+                                    { name: 'Company Profile', path: '/admin/company', roles: ['Super Admin'] },
+                                    { name: 'Financial Years', path: '/admin/financial-years', roles: ['Super Admin'] },
                                     { name: 'User Management', path: '/admin/users', roles: ['Admin', 'Super Admin'] },
                                     { name: 'Roles & Permissions', path: '/admin/roles', roles: ['Super Admin'] },
                                     { name: 'Departments', path: '/admin/departments', roles: ['Super Admin'] },
 
                                     { name: 'Supplier Directory', path: '/admin/suppliers', roles: ['Super Admin'] },
+                                    { name: 'Customer Directory', path: '/admin/customers', roles: ['Super Admin'] },
                                     { name: 'Item Master', path: '/admin/items', roles: ['Super Admin'] },
                                 ].filter(item => item.roles.includes(userRole))
                                     .map((sub, idx) => (

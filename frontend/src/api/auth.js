@@ -1,8 +1,8 @@
 import axiosInstance from './axiosInstance';
 
-export const loginAPI = async (email, password) => {
+export const loginAPI = async (email, password, financialYearId) => {
     try {
-        const response = await axiosInstance.post('/api/auth/login', { email, password });
+        const response = await axiosInstance.post('/api/auth/login', { email, password, financialYearId });
         return response.data;
     } catch (error) {
         console.error('Login API error:', error);

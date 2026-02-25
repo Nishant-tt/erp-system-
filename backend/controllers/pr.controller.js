@@ -12,7 +12,11 @@ exports.createPR = async (req, res) => {
             return res.status(400).json({ message: "User department is not configured. Please contact admin." });
         }
         const pr = await PR.create(prData);
-        res.status(201).json(pr);
+        const populatedPR = await PR.findById(pr._id)
+            .populate("requestedBy", "name email")
+            .populate("department", "name code")
+            .populate("items.item");
+        res.status(201).json(populatedPR);
     } catch (error) {
         res.status(400).json({ message: "Error creating PR", error: error.message });
     }
@@ -41,6 +45,7 @@ exports.getPRs = async (req, res) => {
             .populate("requestedBy", "name email")
             .populate("department", "name code")
             .populate("approver", "name")
+            .populate("items.item")
             .sort({ createdAt: -1 });
 
         res.json(prs);
@@ -54,7 +59,8 @@ exports.getPRById = async (req, res) => {
         const pr = await PR.findById(req.params.id)
             .populate("requestedBy", "name email")
             .populate("department", "name code")
-            .populate("approver", "name");
+            .populate("approver", "name")
+            .populate("items.item");
 
         if (!pr) return res.status(404).json({ message: "PR not found" });
         res.json(pr);

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPRAPI } from '../../api/pr';
+import { getItemsAPI } from '../../api/itemMaster';
 import {
     Plus,
     Trash2,
@@ -13,21 +14,139 @@ import {
     ChevronDown,
     Save,
     Send,
-    Loader2
+    Loader2,
+    Search,
+    Package
 } from 'lucide-react';
+
+const ItemDropdown = ({ value, items, onChange, error }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [search, setSearch] = useState('');
+    const dropdownRef = useRef(null);
+
+    const selectedItem = items.find(i => i._id === value);
+
+    const filteredItems = items.filter(item =>
+        item.itemName.toLowerCase().includes(search.toLowerCase()) ||
+        item.itemCode.toLowerCase().includes(search.toLowerCase())
+    );
+
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+                setIsOpen(false);
+                setSearch('');
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    return (
+        <div className="relative" ref={dropdownRef}>
+            <button
+                type="button"
+                onClick={() => setIsOpen(!isOpen)}
+                className={`w-full px-5 py-3.5 bg-white border-2 rounded-2xl outline-none font-bold text-sm transition-all flex items-center justify-between gap-2 text-left ${error ? 'border-red-200' : isOpen ? 'border-primary/30 shadow-lg shadow-primary/5' : 'border-slate-100 hover:border-slate-200'}`}
+            >
+                {selectedItem ? (
+                    <span className="flex items-center gap-2 truncate">
+                        <Package size={14} className="text-primary shrink-0" />
+                        <span className="text-slate-400 text-xs font-black">{selectedItem.itemCode}</span>
+                        <span className="text-slate-300">|</span>
+                        <span className="truncate">{selectedItem.itemName}</span>
+                    </span>
+                ) : (
+                    <span className="text-slate-400">Select an item...</span>
+                )}
+                <ChevronDown size={16} className={`text-slate-400 shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {isOpen && (
+                <div className="absolute z-50 mt-2 w-full bg-white border border-slate-200 rounded-2xl shadow-2xl shadow-slate-200/50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="p-3 border-b border-slate-100">
+                        <div className="relative">
+                            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                            <input
+                                type="text"
+                                placeholder="Search items..."
+                                className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-100 rounded-xl outline-none text-sm font-medium focus:border-primary/30 transition-all"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                autoFocus
+                            />
+                        </div>
+                    </div>
+                    <div className="max-h-52 overflow-y-auto">
+                        {filteredItems.length === 0 ? (
+                            <div className="p-4 text-center text-xs text-slate-400 font-bold uppercase tracking-widest">
+                                No items found
+                            </div>
+                        ) : (
+                            filteredItems.map(item => (
+                                <button
+                                    key={item._id}
+                                    type="button"
+                                    onClick={() => {
+                                        onChange(item);
+                                        setIsOpen(false);
+                                        setSearch('');
+                                    }}
+                                    className={`w-full px-5 py-3 text-left flex items-center gap-3 hover:bg-primary/5 transition-colors text-sm ${value === item._id ? 'bg-primary/5 text-primary' : 'text-slate-700'}`}
+                                >
+                                    <Package size={14} className={`shrink-0 ${value === item._id ? 'text-primary' : 'text-slate-300'}`} />
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-xs font-black text-slate-400">{item.itemCode}</span>
+                                            <span className="text-slate-300">|</span>
+                                            <span className="font-bold truncate">{item.itemName}</span>
+                                        </div>
+                                        <div className="text-[10px] text-slate-400 font-medium mt-0.5">
+                                            {item.category} · UOM: {item.uom} · Rate: ₹{item.standardRate?.toLocaleString('en-IN')}
+                                        </div>
+                                    </div>
+                                    {value === item._id && (
+                                        <CheckCircle2 size={14} className="text-primary shrink-0" />
+                                    )}
+                                </button>
+                            ))
+                        )}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
 
 const RaisePR = () => {
     const navigate = useNavigate();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
+    const [masterItems, setMasterItems] = useState([]);
+    const [loadingItems, setLoadingItems] = useState(true);
 
     const [items, setItems] = useState([
-        { description: '', quantity: 1, unit: 'pcs', estimatedUnitCost: 0 }
+        { item: '', description: '', quantity: 1, unit: 'pcs', estimatedUnitCost: 0 }
     ]);
     const [itemErrors, setItemErrors] = useState([{}]);
 
+    useEffect(() => {
+        const fetchItems = async () => {
+            try {
+                const data = await getItemsAPI();
+                setMasterItems(data.filter(i => i.isActive));
+            } catch (err) {
+                console.error('Failed to load items:', err);
+                setMessage({ type: 'error', text: 'Failed to load item master data.' });
+            } finally {
+                setLoadingItems(false);
+            }
+        };
+        fetchItems();
+    }, []);
+
     const addItem = () => {
-        setItems([...items, { description: '', quantity: 1, unit: 'pcs', estimatedUnitCost: 0 }]);
+        setItems([...items, { item: '', description: '', quantity: 1, unit: 'pcs', estimatedUnitCost: 0 }]);
         setItemErrors([...itemErrors, {}]);
     };
 
@@ -50,9 +169,28 @@ const RaisePR = () => {
         }
     };
 
+    const handleItemSelect = (index, selectedMasterItem) => {
+        const newItems = [...items];
+        newItems[index] = {
+            ...newItems[index],
+            item: selectedMasterItem._id,
+            description: selectedMasterItem.itemName,
+            unit: selectedMasterItem.uom || 'pcs',
+            estimatedUnitCost: selectedMasterItem.standardRate || 0
+        };
+        setItems(newItems);
+
+        // Clear item error
+        if (itemErrors[index]?.item) {
+            const newErrors = [...itemErrors];
+            newErrors[index].item = '';
+            setItemErrors(newErrors);
+        }
+    };
+
     const validateField = (index, field, value) => {
         let error = '';
-        if (field === 'description' && !value.trim()) error = 'Required';
+        if (field === 'item' && !value) error = 'Required';
         if (field === 'quantity' && (isNaN(value) || value <= 0)) error = 'Min 1';
         if (field === 'estimatedUnitCost' && (isNaN(value) || value <= 0)) error = 'Required';
 
@@ -67,9 +205,13 @@ const RaisePR = () => {
 
     const handleSubmit = async (status = 'DRAFT') => {
         // Validation
-        const validItems = items.filter(item => item.description.trim() !== '' && item.quantity > 0 && item.estimatedUnitCost > 0)
+        const validItems = items.filter(item => item.item && item.quantity > 0 && item.estimatedUnitCost > 0)
             .map(item => ({
-                ...item,
+                item: item.item,
+                description: item.description,
+                quantity: item.quantity,
+                unit: item.unit,
+                estimatedUnitCost: item.estimatedUnitCost,
                 totalCost: item.quantity * item.estimatedUnitCost
             }));
 
@@ -96,6 +238,15 @@ const RaisePR = () => {
             setIsSubmitting(false);
         }
     };
+
+    if (loadingItems) {
+        return (
+            <div className="flex items-center justify-center py-32">
+                <Loader2 className="animate-spin text-primary" size={32} />
+                <span className="ml-3 text-sm font-bold text-slate-400 uppercase tracking-widest">Loading items...</span>
+            </div>
+        );
+    }
 
     return (
         <div className="max-w-5xl mx-auto space-y-8 animate-in slide-in-from-bottom-8 duration-500">
@@ -127,7 +278,7 @@ const RaisePR = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Items List */}
                 <div className="lg:col-span-2 space-y-6">
-                    <div className="bg-white rounded-[40px] p-8 shadow-sm border border-slate-200/60 overflow-hidden relative">
+                    <div className="bg-white rounded-[40px] p-8 shadow-sm border border-slate-200/60 relative">
                         <div className="absolute top-0 right-0 p-8 text-slate-50/50 -mr-4 -mt-4">
                             <ShoppingCart size={120} />
                         </div>
@@ -149,16 +300,14 @@ const RaisePR = () => {
                                     <div key={idx} className="grid grid-cols-12 gap-4 items-start bg-slate-50/50 p-6 rounded-[32px] border border-slate-100/50 relative group transition-all hover:bg-white hover:shadow-md">
                                         <div className="col-span-12 md:col-span-6 space-y-1.5">
                                             <div className="flex justify-between items-center ml-1">
-                                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Item Description</label>
-                                                {itemErrors[idx]?.description && <span className="text-[9px] font-bold text-red-500 uppercase tracking-widest animate-pulse">{itemErrors[idx].description}</span>}
+                                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Item</label>
+                                                {itemErrors[idx]?.item && <span className="text-[9px] font-bold text-red-500 uppercase tracking-widest animate-pulse">{itemErrors[idx].item}</span>}
                                             </div>
-                                            <input
-                                                type="text"
-                                                placeholder="What are you requesting?"
-                                                className={`w-full px-5 py-3.5 bg-white border-2 rounded-2xl outline-none focus:border-primary/20 font-bold text-sm transition-all ${itemErrors[idx]?.description ? 'border-red-200' : 'border-slate-100'}`}
-                                                value={item.description}
-                                                onChange={(e) => updateItem(idx, 'description', e.target.value)}
-                                                onBlur={(e) => validateField(idx, 'description', e.target.value)}
+                                            <ItemDropdown
+                                                value={item.item}
+                                                items={masterItems}
+                                                onChange={(selectedItem) => handleItemSelect(idx, selectedItem)}
+                                                error={itemErrors[idx]?.item}
                                             />
                                         </div>
                                         <div className="col-span-4 md:col-span-2 space-y-1.5">

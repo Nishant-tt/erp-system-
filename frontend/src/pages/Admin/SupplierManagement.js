@@ -15,8 +15,19 @@ import {
     MapPin,
     CreditCard,
     Hash,
-    Search
+    Search,
+    Globe,
+    Landmark
 } from 'lucide-react';
+
+const emptyForm = {
+    name: '',
+    tagline: '',
+    address: { street: '', city: '', state: '', zipCode: '', country: 'India' },
+    contact: { email: '', phone: '', website: '' },
+    taxInfo: { gstin: '', pan: '', cin: '' },
+    bankDetails: { bankName: '', accountNumber: '', ifscCode: '', branch: '' }
+};
 
 const SupplierManagement = () => {
     const [suppliers, setSuppliers] = useState([]);
@@ -27,24 +38,9 @@ const SupplierManagement = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [message, setMessage] = useState({ type: '', text: '' });
     const [errors, setErrors] = useState({});
+    const [activeTab, setActiveTab] = useState('general');
 
-    const [formData, setFormData] = useState({
-        name: '',
-        gstin: '',
-        pan: '',
-        contact: {
-            person: '',
-            email: '',
-            phone: '',
-            address: ''
-        },
-        bank_details: {
-            bankName: '',
-            accountNumber: '',
-            ifscCode: '',
-            branch: ''
-        }
-    });
+    const [formData, setFormData] = useState({ ...emptyForm });
 
     useEffect(() => {
         fetchSuppliers();
@@ -66,60 +62,62 @@ const SupplierManagement = () => {
         if (supplier) {
             setEditingSupplier(supplier);
             setFormData({
-                name: supplier.name,
-                gstin: supplier.gstin || '',
-                pan: supplier.pan || '',
+                name: supplier.name || '',
+                tagline: supplier.tagline || '',
+                address: {
+                    street: supplier.address?.street || '',
+                    city: supplier.address?.city || '',
+                    state: supplier.address?.state || '',
+                    zipCode: supplier.address?.zipCode || '',
+                    country: supplier.address?.country || 'India'
+                },
                 contact: {
-                    person: supplier.contact?.person || '',
                     email: supplier.contact?.email || '',
                     phone: supplier.contact?.phone || '',
-                    address: supplier.contact?.address || ''
+                    website: supplier.contact?.website || ''
                 },
-                bank_details: {
-                    bankName: supplier.bank_details?.bankName || '',
-                    accountNumber: supplier.bank_details?.accountNumber || '',
-                    ifscCode: supplier.bank_details?.ifscCode || '',
-                    branch: supplier.bank_details?.branch || ''
+                taxInfo: {
+                    gstin: supplier.taxInfo?.gstin || '',
+                    pan: supplier.taxInfo?.pan || '',
+                    cin: supplier.taxInfo?.cin || ''
+                },
+                bankDetails: {
+                    bankName: supplier.bankDetails?.bankName || '',
+                    accountNumber: supplier.bankDetails?.accountNumber || '',
+                    ifscCode: supplier.bankDetails?.ifscCode || '',
+                    branch: supplier.bankDetails?.branch || ''
                 }
             });
         } else {
             setEditingSupplier(null);
-            setFormData({
-                name: '',
-                gstin: '',
-                pan: '',
-                contact: { person: '', email: '', phone: '', address: '' },
-                bank_details: { bankName: '', accountNumber: '', ifscCode: '', branch: '' }
-            });
+            setFormData({ ...emptyForm, address: { ...emptyForm.address }, contact: { ...emptyForm.contact }, taxInfo: { ...emptyForm.taxInfo }, bankDetails: { ...emptyForm.bankDetails } });
         }
         setErrors({});
+        setActiveTab('general');
         setShowModal(true);
     };
 
-    const validateField = (field, value, group = null) => {
-        let error = '';
-        if (field === 'name' && !value.trim()) error = "Name is required";
-        if (field === 'gstin' && value && !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(value)) error = "Invalid GSTIN";
-        if (field === 'pan' && value && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(value)) error = "Invalid PAN";
-        if (field === 'email' && value && !/\S+@\S+\.\S+/.test(value)) error = "Invalid Email";
-        if (field === 'ifscCode' && value && !/^[A-Z]{4}0[A-Z0-9]{6}$/.test(value)) error = "Invalid IFSC";
-
-        const key = group ? `${group}.${field}` : field;
-        setErrors(prev => ({ ...prev, [key]: error }));
+    const handleChange = (e, section = null) => {
+        const { name, value } = e.target;
+        if (section) {
+            setFormData(prev => ({
+                ...prev,
+                [section]: { ...prev[section], [name]: value }
+            }));
+        } else {
+            setFormData(prev => ({ ...prev, [name]: value }));
+        }
     };
 
     const validateForm = () => {
         const newErrors = {};
         if (!formData.name.trim()) newErrors.name = "Supplier Name is required";
-        if (formData.gstin && !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(formData.gstin)) newErrors.gstin = "Invalid GSTIN format";
-        if (formData.pan && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(formData.pan)) newErrors.pan = "Invalid PAN format";
-
         setErrors(newErrors);
-        return Object.keys(newErrors).length === 0 ? null : "Please correct frontend errors";
+        return Object.keys(newErrors).length === 0 ? null : "Please correct the errors";
     };
 
     const handleSubmit = async (e) => {
-        e.preventDefault();
+        e?.preventDefault();
         const error = validateForm();
         if (error) {
             setMessage({ type: 'error', text: error });
@@ -159,8 +157,16 @@ const SupplierManagement = () => {
 
     const filteredSuppliers = suppliers.filter(s =>
         s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.gstin?.toLowerCase().includes(searchTerm.toLowerCase())
+        s.taxInfo?.gstin?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        s.contact?.email?.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    const tabs = [
+        { id: 'general', label: 'General Info', icon: Building2 },
+        { id: 'address', label: 'Address', icon: MapPin },
+        { id: 'tax', label: 'Tax & IDs', icon: Hash },
+        { id: 'bank', label: 'Bank Details', icon: Landmark }
+    ];
 
     if (isLoading) {
         return (
@@ -192,7 +198,7 @@ const SupplierManagement = () => {
                 </div>
                 <input
                     type="text"
-                    placeholder="Search by name or GSTIN..."
+                    placeholder="Search by name, GSTIN, or email..."
                     className="w-full pl-12 pr-4 py-3 bg-white border-2 border-slate-100 rounded-2xl outline-none focus:border-primary/20 transition-all font-medium text-sm shadow-sm"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -216,6 +222,7 @@ const SupplierManagement = () => {
                                 <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Supplier</th>
                                 <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Tax Identity</th>
                                 <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Contact</th>
+                                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Location</th>
                                 <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Actions</th>
                             </tr>
                         </thead>
@@ -229,7 +236,7 @@ const SupplierManagement = () => {
                                             </div>
                                             <div>
                                                 <p className="text-sm font-bold text-slate-900">{supplier.name}</p>
-                                                <p className="text-[10px] text-slate-500 font-mono">{supplier._id}</p>
+                                                {supplier.tagline && <p className="text-[10px] text-slate-400 font-medium">{supplier.tagline}</p>}
                                             </div>
                                         </div>
                                     </td>
@@ -237,11 +244,11 @@ const SupplierManagement = () => {
                                         <div className="space-y-1">
                                             <div className="flex items-center gap-2">
                                                 <span className="text-[10px] font-black text-slate-400 uppercase w-10 text-right">GST:</span>
-                                                <span className="text-xs font-bold text-slate-700 font-mono tracking-tight">{supplier.gstin || 'N/A'}</span>
+                                                <span className="text-xs font-bold text-slate-700 font-mono tracking-tight">{supplier.taxInfo?.gstin || 'N/A'}</span>
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 <span className="text-[10px] font-black text-slate-400 uppercase w-10 text-right">PAN:</span>
-                                                <span className="text-xs font-bold text-slate-700 font-mono tracking-tight">{supplier.pan || 'N/A'}</span>
+                                                <span className="text-xs font-bold text-slate-700 font-mono tracking-tight">{supplier.taxInfo?.pan || 'N/A'}</span>
                                             </div>
                                         </div>
                                     </td>
@@ -249,6 +256,11 @@ const SupplierManagement = () => {
                                         <div className="space-y-1 text-xs font-medium text-slate-600">
                                             <p className="flex items-center gap-2"><Mail size={12} className="text-slate-400" /> {supplier.contact?.email || 'N/A'}</p>
                                             <p className="flex items-center gap-2"><Phone size={12} className="text-slate-400" /> {supplier.contact?.phone || 'N/A'}</p>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <div className="text-xs font-medium text-slate-600">
+                                            <p className="flex items-center gap-2"><MapPin size={12} className="text-slate-400" /> {supplier.address?.city || 'N/A'}, {supplier.address?.state || ''}</p>
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 text-right">
@@ -271,6 +283,14 @@ const SupplierManagement = () => {
                                     </td>
                                 </tr>
                             ))}
+                            {filteredSuppliers.length === 0 && (
+                                <tr>
+                                    <td colSpan="5" className="px-6 py-16 text-center">
+                                        <Truck size={40} className="text-slate-200 mx-auto mb-3" />
+                                        <p className="text-sm font-black text-slate-400 uppercase tracking-widest">No suppliers found</p>
+                                    </td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
                 </div>
@@ -280,7 +300,7 @@ const SupplierManagement = () => {
             {showModal && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setShowModal(false)} />
-                    <div className="relative w-full max-w-4xl bg-white rounded-[40px] shadow-2xl border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
+                    <div className="relative w-full max-w-3xl bg-white rounded-[40px] shadow-2xl border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
                         <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                             <div>
                                 <h3 className="text-2xl font-black text-slate-900 tracking-tight">
@@ -293,164 +313,223 @@ const SupplierManagement = () => {
                             </button>
                         </div>
 
-                        <form onSubmit={handleSubmit} className="p-8 overflow-y-auto custom-scrollbar flex-1">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                                {/* Basic Info */}
-                                <div className="space-y-6">
-                                    <div className="flex items-center gap-3 pb-2 border-b border-slate-100">
-                                        <div className="p-2 bg-primary/10 text-primary rounded-xl"><Building2 size={20} /></div>
-                                        <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest">Identity & Tax</h4>
-                                    </div>
+                        <div className="flex border-b border-slate-100 px-8 pt-2 bg-slate-50/30">
+                            {tabs.map(tab => (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => setActiveTab(tab.id)}
+                                    className={`flex items-center gap-2 px-4 py-3 text-xs font-bold uppercase tracking-widest border-b-2 transition-all ${activeTab === tab.id
+                                        ? 'border-primary text-primary'
+                                        : 'border-transparent text-slate-400 hover:text-slate-600'
+                                        }`}
+                                >
+                                    <tab.icon size={14} />
+                                    {tab.label}
+                                </button>
+                            ))}
+                        </div>
 
-                                    <div className="space-y-1.5">
-                                        <div className="flex justify-between items-center ml-1">
-                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Company Name</label>
-                                            {errors.name && <span className="text-[9px] font-bold text-red-500 uppercase animate-pulse">{errors.name}</span>}
+                        <form onSubmit={handleSubmit} className="p-8 overflow-y-auto custom-scrollbar flex-1">
+                            {activeTab === 'general' && (
+                                <div className="space-y-6 animate-in fade-in duration-200">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="space-y-1.5">
+                                            <div className="flex justify-between items-center ml-1">
+                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Supplier Name</label>
+                                                {errors.name && <span className="text-[9px] font-bold text-red-500 uppercase animate-pulse">{errors.name}</span>}
+                                            </div>
+                                            <input
+                                                type="text" name="name" required
+                                                className={`w-full px-5 py-3.5 bg-slate-50 border-2 rounded-2xl outline-none focus:border-primary/20 focus:bg-white transition-all font-bold text-sm ${errors.name ? 'border-red-200' : 'border-slate-100'}`}
+                                                placeholder="Enter supplier name"
+                                                value={formData.name}
+                                                onChange={handleChange}
+                                            />
                                         </div>
-                                        <input
-                                            type="text" required
-                                            className={`w-full px-5 py-3.5 bg-slate-50 border-2 rounded-2xl outline-none focus:border-primary/20 focus:bg-white transition-all font-bold text-sm ${errors.name ? 'border-red-200' : 'border-slate-100'}`}
-                                            placeholder="e.g. Global Logistics Pvt Ltd"
-                                            value={formData.name}
-                                            onChange={(e) => {
-                                                setFormData({ ...formData, name: e.target.value });
-                                                if (errors.name) setErrors(prev => ({ ...prev, name: '' }));
-                                            }}
-                                            onBlur={(e) => validateField('name', e.target.value)}
+                                        <div className="space-y-1.5">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tagline</label>
+                                            <input
+                                                type="text" name="tagline"
+                                                className="w-full px-5 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-primary/20 focus:bg-white transition-all font-bold text-sm"
+                                                placeholder="Company's slogan"
+                                                value={formData.tagline}
+                                                onChange={handleChange}
+                                            />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email Address</label>
+                                            <div className="relative group">
+                                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" size={16} />
+                                                <input
+                                                    type="email" name="email"
+                                                    className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-primary/20 focus:bg-white transition-all font-bold text-sm"
+                                                    placeholder="contact@vendor.com"
+                                                    value={formData.contact.email}
+                                                    onChange={(e) => handleChange(e, 'contact')}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Phone Number</label>
+                                            <div className="relative group">
+                                                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" size={16} />
+                                                <input
+                                                    type="text" name="phone"
+                                                    className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-primary/20 focus:bg-white transition-all font-bold text-sm"
+                                                    placeholder="+91 0000 000000"
+                                                    value={formData.contact.phone}
+                                                    onChange={(e) => handleChange(e, 'contact')}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="md:col-span-2 space-y-1.5">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Website URL</label>
+                                            <div className="relative group">
+                                                <Globe className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" size={16} />
+                                                <input
+                                                    type="text" name="website"
+                                                    className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-primary/20 focus:bg-white transition-all font-bold text-sm"
+                                                    placeholder="https://www.vendor.com"
+                                                    value={formData.contact.website}
+                                                    onChange={(e) => handleChange(e, 'contact')}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {activeTab === 'address' && (
+                                <div className="space-y-6 animate-in fade-in duration-200">
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Street Address</label>
+                                        <input type="text" name="street"
+                                            className="w-full px-5 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-primary/20 focus:bg-white transition-all font-bold text-sm"
+                                            placeholder="House/Office No., Street name"
+                                            value={formData.address.street}
+                                            onChange={(e) => handleChange(e, 'address')}
                                         />
                                     </div>
-
-                                    <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-2 gap-6">
                                         <div className="space-y-1.5">
-                                            <div className="flex justify-between items-center ml-1">
-                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">GSTIN</label>
-                                                {errors.gstin && <span className="text-[9px] font-bold text-red-500 uppercase animate-pulse">{errors.gstin}</span>}
-                                            </div>
-                                            <input
-                                                type="text" maxLength={15}
-                                                className={`w-full px-5 py-3.5 bg-slate-50 border-2 rounded-2xl outline-none focus:border-primary/20 focus:bg-white transition-all font-bold text-sm uppercase ${errors.gstin ? 'border-red-200' : 'border-slate-100'}`}
-                                                placeholder="22AAAAA0000A1Z5"
-                                                value={formData.gstin}
-                                                onChange={(e) => {
-                                                    setFormData({ ...formData, gstin: e.target.value.toUpperCase() });
-                                                    if (errors.gstin) setErrors(prev => ({ ...prev, gstin: '' }));
-                                                }}
-                                                onBlur={(e) => validateField('gstin', e.target.value)}
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">City</label>
+                                            <input type="text" name="city"
+                                                className="w-full px-5 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-primary/20 focus:bg-white transition-all font-bold text-sm"
+                                                placeholder="Mumbai"
+                                                value={formData.address.city}
+                                                onChange={(e) => handleChange(e, 'address')}
                                             />
                                         </div>
                                         <div className="space-y-1.5">
-                                            <div className="flex justify-between items-center ml-1">
-                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">PAN Number</label>
-                                                {errors.pan && <span className="text-[9px] font-bold text-red-500 uppercase animate-pulse">{errors.pan}</span>}
-                                            </div>
-                                            <input
-                                                type="text" maxLength={10}
-                                                className={`w-full px-5 py-3.5 bg-slate-50 border-2 rounded-2xl outline-none focus:border-primary/20 focus:bg-white transition-all font-bold text-sm uppercase ${errors.pan ? 'border-red-200' : 'border-slate-100'}`}
-                                                placeholder="ABCDE1234F"
-                                                value={formData.pan}
-                                                onChange={(e) => {
-                                                    setFormData({ ...formData, pan: e.target.value.toUpperCase() });
-                                                    if (errors.pan) setErrors(prev => ({ ...prev, pan: '' }));
-                                                }}
-                                                onBlur={(e) => validateField('pan', e.target.value)}
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">State / Province</label>
+                                            <input type="text" name="state"
+                                                className="w-full px-5 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-primary/20 focus:bg-white transition-all font-bold text-sm"
+                                                placeholder="Maharashtra"
+                                                value={formData.address.state}
+                                                onChange={(e) => handleChange(e, 'address')}
                                             />
                                         </div>
-                                    </div>
-
-                                    <div className="space-y-6 pt-6">
-                                        <div className="flex items-center gap-3 pb-2 border-b border-slate-100">
-                                            <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl"><Hash size={20} /></div>
-                                            <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest">Connect Points</h4>
+                                        <div className="space-y-1.5">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Zip / Postal Code</label>
+                                            <input type="text" name="zipCode"
+                                                className="w-full px-5 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-primary/20 focus:bg-white transition-all font-bold text-sm"
+                                                placeholder="400001"
+                                                value={formData.address.zipCode}
+                                                onChange={(e) => handleChange(e, 'address')}
+                                            />
                                         </div>
-                                        <div className="space-y-4">
-                                            <input
-                                                type="text" placeholder="Contact Person"
-                                                className="w-full px-5 py-3 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-primary/20 text-sm font-bold"
-                                                value={formData.contact.person}
-                                                onChange={(e) => setFormData({ ...formData, contact: { ...formData.contact, person: e.target.value } })}
-                                            />
-                                            <input
-                                                type="email" placeholder="Email Address"
-                                                className="w-full px-5 py-3 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-primary/20 text-sm font-bold"
-                                                value={formData.contact.email}
-                                                onChange={(e) => setFormData({ ...formData, contact: { ...formData.contact, email: e.target.value } })}
-                                            />
-                                            <input
-                                                type="text" placeholder="Phone Number"
-                                                className="w-full px-5 py-3 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-primary/20 text-sm font-bold"
-                                                value={formData.contact.phone}
-                                                onChange={(e) => setFormData({ ...formData, contact: { ...formData.contact, phone: e.target.value } })}
-                                            />
-                                            <textarea
-                                                placeholder="Business Address" rows={3}
-                                                className="w-full px-5 py-3 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-primary/20 text-sm font-bold"
-                                                value={formData.contact.address}
-                                                onChange={(e) => setFormData({ ...formData, contact: { ...formData.contact, address: e.target.value } })}
+                                        <div className="space-y-1.5">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Country</label>
+                                            <input type="text" name="country"
+                                                className="w-full px-5 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-primary/20 focus:bg-white transition-all font-bold text-sm"
+                                                placeholder="India"
+                                                value={formData.address.country}
+                                                onChange={(e) => handleChange(e, 'address')}
                                             />
                                         </div>
                                     </div>
                                 </div>
+                            )}
 
-                                {/* Bank Info */}
-                                <div className="space-y-6">
-                                    <div className="flex items-center gap-3 pb-2 border-b border-slate-100">
-                                        <div className="p-2 bg-emerald-50 text-emerald-600 rounded-xl"><CreditCard size={20} /></div>
-                                        <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest">Financial / Payouts</h4>
+                            {activeTab === 'tax' && (
+                                <div className="space-y-6 animate-in fade-in duration-200">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="space-y-1.5">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">GSTIN</label>
+                                            <input type="text" name="gstin"
+                                                className="w-full px-5 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-primary/20 focus:bg-white transition-all font-bold text-sm font-mono uppercase"
+                                                placeholder="27AAACN1234A1Z1"
+                                                value={formData.taxInfo.gstin}
+                                                onChange={(e) => handleChange({ target: { name: 'gstin', value: e.target.value.toUpperCase() } }, 'taxInfo')}
+                                            />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">PAN Number</label>
+                                            <input type="text" name="pan"
+                                                className="w-full px-5 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-primary/20 focus:bg-white transition-all font-bold text-sm font-mono uppercase"
+                                                placeholder="AAACN1234A"
+                                                value={formData.taxInfo.pan}
+                                                onChange={(e) => handleChange({ target: { name: 'pan', value: e.target.value.toUpperCase() } }, 'taxInfo')}
+                                            />
+                                        </div>
+                                        <div className="md:col-span-2 space-y-1.5">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">CIN (Company Identification Number)</label>
+                                            <input type="text" name="cin"
+                                                className="w-full px-5 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-primary/20 focus:bg-white transition-all font-bold text-sm font-mono uppercase"
+                                                placeholder="L12345MH2023PLC123456"
+                                                value={formData.taxInfo.cin}
+                                                onChange={(e) => handleChange({ target: { name: 'cin', value: e.target.value.toUpperCase() } }, 'taxInfo')}
+                                            />
+                                        </div>
                                     </div>
+                                </div>
+                            )}
 
-                                    <div className="space-y-4">
+                            {activeTab === 'bank' && (
+                                <div className="space-y-6 animate-in fade-in duration-200">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div className="space-y-1.5">
                                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Bank Name</label>
-                                            <input
-                                                type="text"
-                                                className="w-full px-5 py-3 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-primary/20 text-sm font-bold"
-                                                placeholder="e.g. HDFC Bank"
-                                                value={formData.bank_details.bankName}
-                                                onChange={(e) => setFormData({ ...formData, bank_details: { ...formData.bank_details, bankName: e.target.value } })}
+                                            <input type="text" name="bankName"
+                                                className="w-full px-5 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-primary/20 focus:bg-white transition-all font-bold text-sm"
+                                                placeholder="HDFC Bank"
+                                                value={formData.bankDetails.bankName}
+                                                onChange={(e) => handleChange(e, 'bankDetails')}
                                             />
                                         </div>
                                         <div className="space-y-1.5">
                                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Account Number</label>
-                                            <input
-                                                type="text"
-                                                className="w-full px-5 py-3 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-primary/20 text-sm font-bold font-mono tracking-widest"
-                                                placeholder="0000 0000 0000"
-                                                value={formData.bank_details.accountNumber}
-                                                onChange={(e) => setFormData({ ...formData, bank_details: { ...formData.bank_details, accountNumber: e.target.value } })}
+                                            <div className="relative group">
+                                                <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" size={16} />
+                                                <input type="text" name="accountNumber"
+                                                    className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-primary/20 focus:bg-white transition-all font-bold text-sm font-mono"
+                                                    placeholder="50100123456789"
+                                                    value={formData.bankDetails.accountNumber}
+                                                    onChange={(e) => handleChange(e, 'bankDetails')}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">IFSC Code</label>
+                                            <input type="text" name="ifscCode"
+                                                className="w-full px-5 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-primary/20 focus:bg-white transition-all font-bold text-sm font-mono uppercase"
+                                                placeholder="HDFC0000001"
+                                                value={formData.bankDetails.ifscCode}
+                                                onChange={(e) => handleChange({ target: { name: 'ifscCode', value: e.target.value.toUpperCase() } }, 'bankDetails')}
                                             />
                                         </div>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="space-y-1.5">
-                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">IFSC Code</label>
-                                                <input
-                                                    type="text"
-                                                    className="w-full px-5 py-3 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-primary/20 text-sm font-bold uppercase font-mono"
-                                                    placeholder="HDFC0001234"
-                                                    value={formData.bank_details.ifscCode}
-                                                    onChange={(e) => setFormData({ ...formData, bank_details: { ...formData.bank_details, ifscCode: e.target.value.toUpperCase() } })}
-                                                />
-                                            </div>
-                                            <div className="space-y-1.5">
-                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Branch</label>
-                                                <input
-                                                    type="text"
-                                                    className="w-full px-5 py-3 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-primary/20 text-sm font-bold"
-                                                    placeholder="Downtown Branch"
-                                                    value={formData.bank_details.branch}
-                                                    onChange={(e) => setFormData({ ...formData, bank_details: { ...formData.bank_details, branch: e.target.value } })}
-                                                />
-                                            </div>
+                                        <div className="space-y-1.5">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Branch Name</label>
+                                            <input type="text" name="branch"
+                                                className="w-full px-5 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-primary/20 focus:bg-white transition-all font-bold text-sm"
+                                                placeholder="Main Branch, Mumbai"
+                                                value={formData.bankDetails.branch}
+                                                onChange={(e) => handleChange(e, 'bankDetails')}
+                                            />
                                         </div>
                                     </div>
-
-                                    <div className="mt-10 p-6 bg-slate-50 border-2 border-dashed border-slate-200 rounded-[32px]">
-                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 text-center">Data Integrity Notice</p>
-                                        <p className="text-[11px] text-slate-500 font-medium leading-relaxed text-center">
-                                            Verification of GSTIN and PAN is mandatory for tax compliance. Ensure all bank details match the official vendor passbook to avoid payment processing delays.
-                                        </p>
-                                    </div>
                                 </div>
-                            </div>
+                            )}
                         </form>
 
                         <div className="p-8 border-t border-slate-100 bg-slate-50/50 flex gap-4">

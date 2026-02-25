@@ -3,15 +3,25 @@ const mongoose = require("mongoose");
 const supplierSchema = new mongoose.Schema(
     {
         name: { type: String, required: true },
-        gstin: { type: String, unique: true },
-        pan: { type: String, unique: true },
+        tagline: { type: String },
+        address: {
+            street: { type: String },
+            city: { type: String },
+            state: { type: String },
+            zipCode: { type: String },
+            country: { type: String, default: "India" }
+        },
         contact: {
-            person: { type: String },
             email: { type: String },
             phone: { type: String },
-            address: { type: String }
+            website: { type: String }
         },
-        bank_details: {
+        taxInfo: {
+            gstin: { type: String },
+            pan: { type: String },
+            cin: { type: String }
+        },
+        bankDetails: {
             bankName: { type: String },
             accountNumber: { type: String },
             ifscCode: { type: String },

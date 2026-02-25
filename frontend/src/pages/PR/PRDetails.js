@@ -125,9 +125,9 @@ const PRDetails = () => {
                     <div className="flex items-center gap-4">
                         <h1 className="text-3xl font-black text-slate-900 tracking-tight">{pr.prNumber}</h1>
                         <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border flex items-center gap-2 ${pr.status === 'APPROVED' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                                pr.status === 'REJECTED' ? 'bg-red-50 text-red-600 border-red-100' :
-                                    pr.status === 'PENDING_APPROVAL' ? 'bg-amber-50 text-amber-600 border-amber-100' :
-                                        'bg-slate-100 text-slate-600 border-slate-200'
+                            pr.status === 'REJECTED' ? 'bg-red-50 text-red-600 border-red-100' :
+                                pr.status === 'PENDING_APPROVAL' ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                                    'bg-slate-100 text-slate-600 border-slate-200'
                             }`}>
                             {pr.status === 'APPROVED' ? <CheckCircle2 size={14} /> :
                                 pr.status === 'REJECTED' ? <XCircle size={14} /> :
@@ -157,7 +157,7 @@ const PRDetails = () => {
                             <table className="w-full text-left">
                                 <thead>
                                     <tr className="bg-slate-50/50 border-b border-slate-100">
-                                        <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Description</th>
+                                        <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Item</th>
                                         <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Qty</th>
                                         <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Unit Cost</th>
                                         <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Total</th>
@@ -167,7 +167,14 @@ const PRDetails = () => {
                                     {pr.items.map((item, idx) => (
                                         <tr key={idx} className="group hover:bg-slate-50/50 transition-colors">
                                             <td className="px-8 py-6">
-                                                <p className="text-sm font-bold text-slate-900">{item.description}</p>
+                                                {item.item ? (
+                                                    <div>
+                                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{item.item.itemCode}</span>
+                                                        <p className="text-sm font-bold text-slate-900">{item.item.itemName}</p>
+                                                    </div>
+                                                ) : (
+                                                    <p className="text-sm font-bold text-slate-900">{item.description}</p>
+                                                )}
                                             </td>
                                             <td className="px-8 py-6 text-center">
                                                 <span className="text-xs font-black text-slate-600 bg-slate-100 px-3 py-1 rounded-lg">
