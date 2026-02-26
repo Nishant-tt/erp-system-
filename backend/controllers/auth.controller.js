@@ -1,5 +1,6 @@
 const User = require("../models/User");
 const Role = require("../models/Role");
+require("../models/Company");
 const { hashPassword, comparePassword } = require("../utils/hash");
 const { generateToken } = require("../utils/jwt");
 const config = require("../config/config");
@@ -19,8 +20,11 @@ exports.login = async (req, res) => {
   const isMatch = await comparePassword(password, user.password);
   if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
 
+  const Company = require("../models/Company");
   const selectedFY = await FinancialYear.findById(financialYearId);
   if (!selectedFY) return res.status(404).json({ message: "Financial Year not found" });
+
+  const companyDetails = await Company.findById(selectedFY.company);
 
   // Only Super Admin can login into inactive financial years
   if (!selectedFY.isActive && user.role.name !== 'Super Admin') {
@@ -43,6 +47,10 @@ exports.login = async (req, res) => {
       id: selectedFY._id,
       name: selectedFY.name,
       code: selectedFY.code
+    },
+    company: {
+      id: companyDetails?._id,
+      name: companyDetails?.name
     }
   });
 };

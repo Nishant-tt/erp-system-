@@ -22,6 +22,22 @@ exports.createPayment = async (req, res) => {
             await invoice.save();
         }
 
+        // --- AUTOMATED FINANCE POSTING ---
+        try {
+            const { createAutoJournalEntry } = require("../utils/financeHelper");
+            await createAutoJournalEntry({
+                reference: payment.transactionId || `VPAY-${payment._id}`,
+                description: `Vendor Payment made for Invoice ${invoice ? invoice.vendorInvoiceNumber : ''}`,
+                items: [
+                    { accountCode: "2000", debit: payment.amount },  // Accounts Payable
+                    { accountCode: "1000", credit: payment.amount }  // Bank/Cash
+                ]
+            });
+        } catch (finError) {
+            console.error("Finance Posting Failed:", finError.message);
+        }
+        // ---------------------------------
+
         res.status(201).json(payment);
     } catch (error) {
         res.status(400).json({ message: "Error recording payment", error: error.message });

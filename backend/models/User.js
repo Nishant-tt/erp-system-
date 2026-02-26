@@ -11,6 +11,7 @@ const userSchema = new mongoose.Schema(
     profileImage: { type: String },
     department: { type: mongoose.Schema.Types.ObjectId, ref: "Department" },
     team: { type: mongoose.Schema.Types.ObjectId, ref: "Team" },
+    company: { type: mongoose.Schema.Types.ObjectId, ref: "Company" },
     status: { type: String, enum: ["ACTIVE", "INACTIVE"], default: "ACTIVE" },
   },
   { timestamps: true }

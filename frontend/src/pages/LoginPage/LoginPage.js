@@ -73,6 +73,12 @@ const LoginPage = () => {
         localStorage.setItem('activeFY', JSON.stringify(data.financialYear));
       }
 
+      // Store company context
+      if (data.company) {
+        localStorage.setItem('companyId', data.company.id || '');
+        localStorage.setItem('companyName', data.company.name || '');
+      }
+
       navigate('/dashboard');
     } catch (err) {
       setError(err.message || 'Authentication failed. Please check your credentials.');

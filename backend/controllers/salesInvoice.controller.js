@@ -1,5 +1,6 @@
 const SalesInvoice = require("../models/SalesInvoice");
 const SalesOrder = require("../models/SalesOrder");
+const { createAutoJournalEntry } = require("../utils/financeHelper");
 
 exports.createInvoice = async (req, res) => {
     try {
@@ -14,6 +15,24 @@ exports.createInvoice = async (req, res) => {
         if (invoice.soReference) {
             await SalesOrder.findByIdAndUpdate(invoice.soReference, { status: "INVOICED" });
         }
+
+        // --- AUTOMATED FINANCE POSTING ---
+        try {
+            await createAutoJournalEntry({
+                reference: invoice.invoiceNumber,
+                description: `Sales Invoice for ${invoice.invoiceNumber}`,
+                items: [
+                    { accountCode: "1200", debit: invoice.grandTotal }, // Accounts Receivable
+                    { accountCode: "4000", credit: invoice.subtotal },   // Sales Revenue
+                    { accountCode: "2200", credit: invoice.taxTotal }    // Tax Payable
+                ]
+            });
+        } catch (finError) {
+            console.error("Finance Posting Failed:", finError.message);
+            // We don't want to fail the invoice creation if finance posting fails
+            // but in a production system, you'd want to log this for manual retry.
+        }
+        // ---------------------------------
 
         res.status(201).json(invoice);
     } catch (error) {

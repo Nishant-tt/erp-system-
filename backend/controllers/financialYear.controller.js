@@ -3,7 +3,16 @@ const Company = require("../models/Company");
 
 exports.getFinancialYears = async (req, res) => {
     try {
-        const years = await FinancialYear.find().populate("company", "name").sort({ startDate: -1 });
+        let years = await FinancialYear.find().sort({ startDate: -1 }).lean();
+
+        // Manual population to avoid potential StrictPopulateError
+        for (let year of years) {
+            if (year.company) {
+                const company = await Company.findById(year.company).select("name").lean();
+                year.company = company;
+            }
+        }
+
         res.json(years);
     } catch (error) {
         res.status(500).json({ message: "Error fetching financial years", error: error.message });

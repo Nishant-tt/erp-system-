@@ -47,6 +47,11 @@ import CustomerPaymentManagement from './pages/Sales/CustomerPaymentManagement';
 import CustomerPaymentForm from './pages/Sales/CustomerPaymentForm';
 import SalesAnalytics from './pages/Reports/SalesAnalytics';
 
+// Finance Module
+import ChartOfAccounts from './pages/Finance/ChartOfAccounts';
+import JournalEntries from './pages/Finance/JournalEntries';
+import TrialBalance from './pages/Finance/TrialBalance';
+
 function App() {
   return (
     <Router>
@@ -112,6 +117,11 @@ function App() {
           {/* Reports & Analytics */}
           <Route path="/performance" element={<Performance />} />
           <Route path="/sales-analytics" element={<SalesAnalytics />} />
+
+          {/* Finance Lifecycle */}
+          <Route path="/chart-of-accounts" element={<ChartOfAccounts />} />
+          <Route path="/journal-entries" element={<JournalEntries />} />
+          <Route path="/trial-balance" element={<TrialBalance />} />
         </Route>
 
         <Route path="/" element={<Navigate to="/login" replace />} />

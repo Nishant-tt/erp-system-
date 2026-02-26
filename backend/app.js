@@ -42,4 +42,8 @@ app.use("/api/delivery-notes", require("./routes/deliveryNote.routes"));
 app.use("/api/sales-invoices", require("./routes/salesInvoice.routes"));
 app.use("/api/customer-payments", require("./routes/customerPayment.routes"));
 
+// Finance Routes
+app.use("/api/accounts", require("./routes/account.routes"));
+app.use("/api/journal-entries", require("./routes/journalEntry.routes"));
+
 module.exports = app;

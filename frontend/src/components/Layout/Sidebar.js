@@ -309,6 +309,43 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                         {isOpen && <span className="font-semibold text-sm tracking-wide flex-1 text-left">Performance</span>}
                     </button>
                 </div>
+
+                <div className="pt-4 pb-2 px-3 border-t border-slate-800/30">
+                    <p className={`text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-3 mb-2 transition-opacity duration-300 ${!isOpen && 'opacity-0'}`}>Finance Lifecycle</p>
+
+                    <button
+                        onClick={() => navigate('/chart-of-accounts')}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group/coa ${location.pathname.startsWith('/chart-of-accounts')
+                            ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/20'
+                            : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                            } ${!isOpen && 'justify-center px-1'}`}
+                    >
+                        <LucideIcons.Book size={20} className={location.pathname.startsWith('/chart-of-accounts') ? 'text-white' : 'text-slate-400 group-hover/coa:text-white'} />
+                        {isOpen && <span className="font-semibold text-sm tracking-wide flex-1 text-left">Chart of Accounts</span>}
+                    </button>
+
+                    <button
+                        onClick={() => navigate('/journal-entries')}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group/je ${location.pathname.startsWith('/journal-entries')
+                            ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
+                            : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                            } ${!isOpen && 'justify-center px-1'}`}
+                    >
+                        <LucideIcons.Layers size={20} className={location.pathname.startsWith('/journal-entries') ? 'text-white' : 'text-slate-400 group-hover/je:text-white'} />
+                        {isOpen && <span className="font-semibold text-sm tracking-wide flex-1 text-left">Journal Entries</span>}
+                    </button>
+
+                    <button
+                        onClick={() => navigate('/trial-balance')}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group/tb ${location.pathname.startsWith('/trial-balance')
+                            ? 'bg-amber-600 text-white shadow-lg shadow-amber-500/20'
+                            : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                            } ${!isOpen && 'justify-center px-1'}`}
+                    >
+                        <LucideIcons.Calculator size={20} className={location.pathname.startsWith('/trial-balance') ? 'text-white' : 'text-slate-400 group-hover/tb:text-white'} />
+                        {isOpen && <span className="font-semibold text-sm tracking-wide flex-1 text-left">Trial Balance</span>}
+                    </button>
+                </div>
             </nav>
 
             <div className="px-3 pb-2 space-y-1">
