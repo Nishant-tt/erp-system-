@@ -1,14 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import {
-    FileText,
     Plus,
     Trash2,
     Save,
     ArrowLeft,
-    Search,
-    IndianRupee,
-    Info,
-    CheckCircle2
+    Info
 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { createQuotationAPI, getQuotationByIdAPI } from '../../api/quotation';

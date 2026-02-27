@@ -1,15 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import {
-    CreditCard,
-    Plus,
-    Save,
     ArrowLeft,
     Info,
-    Receipt,
     Banknote,
     CheckCircle2,
-    Calendar,
-    Search
 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { createCustomerPaymentAPI, getCustomerPaymentByIdAPI } from '../../api/customerPayment';

@@ -2,11 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
     Receipt,
     Plus,
-    Search,
     TrendingUp,
-    CheckCircle2,
-    Clock,
-    DollarSign,
     Loader2,
     Calendar,
     ArrowRight

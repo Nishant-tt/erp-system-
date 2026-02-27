@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
     Target,
     Plus,
-    Search,
     Trophy,
     TrendingUp,
     Clock,

@@ -2,10 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
     Truck,
     Plus,
-    Search,
     Box,
-    CheckCircle2,
-    Clock,
     User,
     ArrowUpRight,
     Loader2

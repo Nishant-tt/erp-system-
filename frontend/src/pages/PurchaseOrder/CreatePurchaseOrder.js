@@ -5,18 +5,13 @@ import { getSuppliersAPI } from '../../api/supplier';
 import { createPOAPI } from '../../api/po';
 import {
     FileText,
-    Truck,
-    Plus,
     Trash2,
     CheckCircle2,
     AlertCircle,
     ArrowLeft,
     IndianRupee,
-    ShoppingCart,
     Loader2,
-    Search,
     Package,
-    ChevronDown,
     Calendar,
     FileSpreadsheet
 } from 'lucide-react';

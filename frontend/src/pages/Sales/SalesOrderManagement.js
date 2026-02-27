@@ -2,14 +2,11 @@ import React, { useState, useEffect } from 'react';
 import {
     ShoppingBag,
     Plus,
-    Search,
     Truck,
-    Clock,
     CheckCircle2,
     Calendar,
     ArrowUpRight,
-    Loader2,
-    MoreVertical
+    Loader2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getSalesOrdersAPI } from '../../api/salesOrder';
