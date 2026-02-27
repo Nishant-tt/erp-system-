@@ -4,6 +4,11 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 const axiosInstance = axios.create({
     baseURL: API_URL,
+    headers: {
+        "Cache-Control": "no-cache",
+        Pragma: "no-cache",
+        Expires: "0",
+    },
 });
 
 // Request interceptor to add the token to every request
@@ -13,6 +18,13 @@ axiosInstance.interceptors.request.use(
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
+
+        // prevent caching
+        config.params = {
+            ...config.params,
+            _t: Date.now()
+        };
+
         return config;
     },
     (error) => {
