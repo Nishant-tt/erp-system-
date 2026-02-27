@@ -27,9 +27,10 @@ const LoginPage = () => {
   const fetchFYs = async () => {
     try {
       setIsPageLoading(true);
+      console.log("Fetching financial years...");
       const data = await getFinancialYearsAPI();
       setFinancialYears(data);
-
+console.log("Fetched financial years:", data);
       // Auto-select the active financial year
       const activeFY = data.find(fy => fy.isActive);
       if (activeFY) {
