@@ -25,7 +25,7 @@ const DashboardLayout = () => {
                 const secondsRemaining = Math.round((payload.exp * 1000 - Date.now()) / 1000);
 
                 if (secondsRemaining <= 0) {
-                    console.warn('Session expired - Forced redirection');
+                    // console.warn('Session expired - Forced redirection');
                     localStorage.clear();
                     window.location.href = '/login'; // Hard redirect
                 }
@@ -59,10 +59,12 @@ const DashboardLayout = () => {
         <div className="flex min-h-screen bg-slate-50 font-sans">
             <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
-            <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${isSidebarOpen ? 'pl-64' : 'pl-16'}`}>
+            <div
+                className={`flex-1 flex flex-col min-w-0 transition-all duration-300 pl-0 ${isSidebarOpen ? 'md:pl-64' : 'md:pl-16'}`}
+            >
                 <Header toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />
 
-                <main className="flex-1 p-8 pb-24">
+                <main className="flex-1 p-4 sm:p-6 lg:p-8 pb-24">
                     <Outlet />
                 </main>
 
