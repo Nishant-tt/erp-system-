@@ -1,16 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import {
-    Target,
     Save,
     ArrowLeft,
     TrendingUp,
-    Users,
     Briefcase,
     Calendar,
     MessageSquare,
-    Info,
-    Trophy,
-    AlertCircle
+    Trophy
 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { createOpportunityAPI, getOpportunityByIdAPI, updateOpportunityAPI } from '../../api/opportunity';

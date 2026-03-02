@@ -1,14 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {
-    FileText,
-    Plus,
-    Trash2,
     Save,
     ArrowLeft,
     Receipt,
-    Calculator,
-    Info,
-    Calendar,
     Truck
 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
