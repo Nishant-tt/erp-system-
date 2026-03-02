@@ -7,7 +7,7 @@ const debugDB = async () => {
     try {
         await mongoose.connect(process.env.MONGO_URI);
         const fyears = await FinancialYear.find();
-        console.log("Documents in FinancialYear collection:", fyears.length);
+        // console.log("Documents in FinancialYear collection:", fyears.length);
         if (fyears.length > 0) {
             console.log("First document company field:", fyears[0].company);
         }

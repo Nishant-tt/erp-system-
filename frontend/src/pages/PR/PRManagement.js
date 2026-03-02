@@ -15,6 +15,7 @@ import {
     IndianRupee
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import Pagination from '../../components/common/Pagination';
 
 const PRManagement = () => {
     const navigate = useNavigate();
@@ -22,6 +23,8 @@ const PRManagement = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('ALL');
+    const [page, setPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
     const userRole = localStorage.getItem('role');
 
     useEffect(() => {
@@ -65,6 +68,10 @@ const PRManagement = () => {
         const matchesStatus = statusFilter === 'ALL' || pr.status === statusFilter;
         return matchesSearch && matchesStatus;
     });
+
+    const totalFiltered = filteredPRs.length;
+    const startIndex = (page - 1) * pageSize;
+    const paginatedPRs = filteredPRs.slice(startIndex, startIndex + pageSize);
 
     if (isLoading) {
         return (
@@ -135,7 +142,7 @@ const PRManagement = () => {
 
             {/* PR List */}
             <div className="grid grid-cols-1 gap-4">
-                {filteredPRs.map((pr) => (
+                {paginatedPRs.map((pr) => (
                     <div
                         key={pr._id}
                         onClick={() => navigate(`/prs/${pr._id}`)}
@@ -179,7 +186,7 @@ const PRManagement = () => {
                     </div>
                 ))}
 
-                {filteredPRs.length === 0 && (
+                {totalFiltered === 0 && (
                     <div className="py-20 flex flex-col items-center justify-center text-center space-y-4">
                         <div className="w-20 h-20 bg-slate-50 rounded-[40px] flex items-center justify-center text-slate-200">
                             <FileText size={40} />
@@ -191,6 +198,17 @@ const PRManagement = () => {
                     </div>
                 )}
             </div>
+
+            <Pagination
+                page={page}
+                pageSize={pageSize}
+                total={totalFiltered}
+                onPageChange={setPage}
+                onPageSizeChange={(newSize) => {
+                    setPageSize(newSize);
+                    setPage(1);
+                }}
+            />
         </div>
     );
 };

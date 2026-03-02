@@ -62,6 +62,8 @@ function App() {
         {/* Dashboard Routes with Layout */}
         <Route element={<DashboardLayout />}>
           <Route path="/dashboard" element={<DashboardPage />} />
+
+          {/* Profile Suite */}
           <Route path="/profile" element={<ProfilePage />} />
 
           {/* Admin Suite */}

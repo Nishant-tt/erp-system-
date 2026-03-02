@@ -6,7 +6,7 @@ const test = async () => {
         await mongoose.connect("mongodb://127.0.0.1:27017/erp");
         console.log("Connected");
         const lead = await Lead.create({ firstName: "Test" });
-        console.log("Created:", lead.leadNumber);
+        // console.log("Created:", lead.leadNumber);
         process.exit(0);
     } catch (err) {
         console.error("Error:", err);

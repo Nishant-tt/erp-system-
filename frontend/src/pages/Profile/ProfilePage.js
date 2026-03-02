@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { getProfileAPI, updateProfileAPI } from '../../api/user';
+import { getProfileAPI, updateProfileAPI, updateUserAPI } from '../../api/user';
 import { getModulesAPI } from '../../api/modules';
-import { User, Shield, Key, Image as ImageIcon, CheckCircle, ChevronRight, LayoutDashboard } from 'lucide-react';
+import { User, Shield, Key, Image as ImageIcon, CheckCircle, ChevronRight, LayoutDashboard, Lock, Eye, EyeOff } from 'lucide-react';
 
 const ProfilePage = () => {
     const [profile, setProfile] = useState(null);
@@ -9,6 +9,16 @@ const ProfilePage = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [isUpdating, setIsUpdating] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
+
+    const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
+    const [currentPassword, setCurrentPassword] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    
 
     useEffect(() => {
         const fetchData = async () => {
@@ -18,6 +28,8 @@ const ProfilePage = () => {
                     getModulesAPI()
                 ]);
                 setProfile(profileData);
+                setName(profileData?.name || '');
+                setEmail(profileData?.email || '');
                 setModules(modulesData);
             } catch (error) {
                 console.error('Full Error Object:', error);
@@ -46,6 +58,65 @@ const ProfilePage = () => {
             localStorage.setItem('userName', updatedProfile.name);
         } catch (error) {
             setMessage({ type: 'error', text: 'Failed to upload image.' });
+        } finally {
+            setIsUpdating(false);
+        }
+    };
+
+    const handleProfileUpdate = async (e) => {
+        e.preventDefault();
+
+        if (!name || !email) {
+            setMessage({ type: 'error', text: 'Name and email are required.' });
+            return;
+        }
+
+        const isPasswordChangeRequested = currentPassword || newPassword || confirmPassword;
+
+        if (isPasswordChangeRequested) {
+            if (!currentPassword || !newPassword || !confirmPassword) {
+                setMessage({ type: 'error', text: 'To change password, fill all password fields.' });
+                return;
+            }
+            if (newPassword !== confirmPassword) {
+                setMessage({ type: 'error', text: 'New password and confirmation do not match.' });
+                return;
+            }
+        }
+
+        const userId = profile?._id || localStorage.getItem('userId');
+        if (!userId) {
+            setMessage({ type: 'error', text: 'Unable to determine user id for update.' });
+            return;
+        }
+
+        const payload = {
+            name,
+            email,
+        };
+
+        if (isPasswordChangeRequested) {
+            payload.currentPassword = currentPassword;
+            payload.newPassword = newPassword;
+        }
+
+        setIsUpdating(true);
+        try {
+            const updatedProfile = await updateUserAPI(userId, payload);
+            setProfile(updatedProfile);
+            setMessage({
+                type: 'success',
+                text: isPasswordChangeRequested
+                    ? 'Profile and password updated successfully.'
+                    : 'Profile updated successfully.',
+            });
+            localStorage.setItem('userName', updatedProfile.name);
+            setCurrentPassword('');
+            setNewPassword('');
+            setConfirmPassword('');
+        } catch (error) {
+            const errorMessage = error.response?.data?.message || error.message || 'Failed to update profile.';
+            setMessage({ type: 'error', text: errorMessage });
         } finally {
             setIsUpdating(false);
         }
@@ -147,26 +218,170 @@ const ProfilePage = () => {
                     </div>
                 </div>
 
-                {/* Module & Menu Rights */}
+                {/* Account Settings + Module & Menu Rights */}
                 <div className="lg:col-span-2 space-y-6">
+                    {/* Account Settings */}
+                    <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/60">
+                        <div className="flex items-center justify-between gap-3 mb-6">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
+                                    <Key size={20} />
+                                </div>
+                                <h2 className="font-bold text-slate-900 uppercase tracking-widest text-xs">
+                                    Account Settings
+                                </h2>
+                            </div>
+                        </div>
+
+                        <form onSubmit={handleProfileUpdate} className="space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <label className="text-[11px] font-bold text-slate-600 uppercase tracking-widest">
+                                        Full Name
+                                    </label>
+                                    <input
+                                        type="text"
+                                        className="w-full px-3 py-2.5 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white outline-none text-sm font-medium text-slate-800 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                        value={name}
+                                        onChange={(e) => setName(e.target.value)}
+                                        disabled={isUpdating}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[11px] font-bold text-slate-600 uppercase tracking-widest">
+                                        Work Email
+                                    </label>
+                                    <input
+                                        type="email"
+                                        className="w-full px-3 py-2.5 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white outline-none text-sm font-medium text-slate-800 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        disabled={isUpdating}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="border-t border-slate-100 pt-4">
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                                    <Lock size={14} className="text-slate-400" />
+                                    Password (optional)
+                                </p>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div className="space-y-2">
+                                        <label className="text-[11px] font-bold text-slate-600 uppercase tracking-widest">
+                                            Current Password
+                                        </label>
+                                        <div className="relative">
+                                            <input
+                                                type={showCurrentPassword ? 'text' : 'password'}
+                                                className="w-full px-3 pr-10 py-2.5 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white outline-none text-sm font-medium text-slate-800 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                                value={currentPassword}
+                                                onChange={(e) => setCurrentPassword(e.target.value)}
+                                                autoComplete="current-password"
+                                                disabled={isUpdating}
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                                                className="absolute inset-y-0 right-2 flex items-center text-slate-400 hover:text-slate-600"
+                                                tabIndex={-1}
+                                            >
+                                                {showCurrentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[11px] font-bold text-slate-600 uppercase tracking-widest">
+                                            New Password
+                                        </label>
+                                        <div className="relative">
+                                            <input
+                                                type={showNewPassword ? 'text' : 'password'}
+                                                className="w-full px-3 pr-10 py-2.5 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white outline-none text-sm font-medium text-slate-800 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                                value={newPassword}
+                                                onChange={(e) => setNewPassword(e.target.value)}
+                                                autoComplete="new-password"
+                                                disabled={isUpdating}
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowNewPassword(!showNewPassword)}
+                                                className="absolute inset-y-0 right-2 flex items-center text-slate-400 hover:text-slate-600"
+                                                tabIndex={-1}
+                                            >
+                                                {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[11px] font-bold text-slate-600 uppercase tracking-widest">
+                                            Confirm New Password
+                                        </label>
+                                        <div className="relative">
+                                            <input
+                                                type={showConfirmPassword ? 'text' : 'password'}
+                                                className="w-full px-3 pr-10 py-2.5 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white outline-none text-sm font-medium text-slate-800 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                                value={confirmPassword}
+                                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                                autoComplete="new-password"
+                                                disabled={isUpdating}
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                                className="absolute inset-y-0 right-2 flex items-center text-slate-400 hover:text-slate-600"
+                                                tabIndex={-1}
+                                            >
+                                                {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p className="mt-2 text-[11px] text-slate-400">
+                                    Leave password fields empty to update only your name and email.
+                                </p>
+                            </div>
+
+                            <div className="flex justify-end">
+                                <button
+                                    type="submit"
+                                    disabled={isUpdating}
+                                    className="px-6 py-3 rounded-2xl bg-blue-600 text-white text-xs font-black uppercase tracking-[0.2em] shadow-lg shadow-blue-500/20 hover:bg-blue-700 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed transition-all"
+                                >
+                                    {isUpdating ? 'Saving...' : 'Save Changes'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    {/* Module & Menu Rights */}
                     <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/60">
                         <div className="flex items-center gap-3 mb-6">
-                            <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
-                                <Key size={20} />
+                            <div className="p-2 bg-slate-100 text-slate-600 rounded-xl">
+                                <LayoutDashboard size={20} />
                             </div>
-                            <h2 className="font-bold text-slate-900 uppercase tracking-widest text-xs">Module & Menu Rights</h2>
+                            <h2 className="font-bold text-slate-900 uppercase tracking-widest text-xs">
+                                Module & Menu Rights
+                            </h2>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {modules.map((mod, idx) => (
-                                <div key={idx} className="bg-slate-50/50 rounded-2xl border border-slate-100 overflow-hidden group hover:border-indigo-200 transition-all">
+                                <div
+                                    key={idx}
+                                    className="bg-slate-50/50 rounded-2xl border border-slate-100 overflow-hidden group hover:border-indigo-200 transition-all"
+                                >
                                     <div className="p-4 flex items-center gap-3 bg-white border-b border-slate-100">
                                         <div className="p-2 bg-slate-100 text-slate-600 rounded-lg group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
                                             <LayoutDashboard size={16} />
                                         </div>
                                         <div className="flex-1">
-                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">Module</p>
-                                            <p className="text-sm font-bold text-slate-900 leading-none">{mod.name}</p>
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">
+                                                Module
+                                            </p>
+                                            <p className="text-sm font-bold text-slate-900 leading-none">
+                                                {mod.name}
+                                            </p>
                                         </div>
                                         <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center text-green-600">
                                             <CheckCircle size={12} />
@@ -174,10 +389,15 @@ const ProfilePage = () => {
                                     </div>
 
                                     <div className="p-4 space-y-2">
-                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Menus Enabled</p>
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">
+                                            Menus Enabled
+                                        </p>
                                         <div className="flex flex-wrap gap-2">
                                             {mod.menus?.map((menu, mIdx) => (
-                                                <div key={mIdx} className="flex items-center gap-1 px-2 py-1 bg-white border border-slate-100 rounded-md text-[10px] font-bold text-slate-600 group-hover:border-indigo-100">
+                                                <div
+                                                    key={mIdx}
+                                                    className="flex items-center gap-1 px-2 py-1 bg-white border border-slate-100 rounded-md text-[10px] font-bold text-slate-600 group-hover:border-indigo-100"
+                                                >
                                                     <ChevronRight size={10} className="text-indigo-400" />
                                                     {menu.name}
                                                 </div>

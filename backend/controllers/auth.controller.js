@@ -69,7 +69,7 @@ exports.forgotPassword = async (req, res) => {
 
     // In a real application, you would generate a reset token and send an email here.
     // For this task, we will just return a success message.
-    console.log(`Password reset requested for: ${email}`);
+    // console.log(`Password reset requested for: ${email}`);
 
     res.json({ message: "Password reset link has been sent to your email (Mocked)" });
   } catch (error) {

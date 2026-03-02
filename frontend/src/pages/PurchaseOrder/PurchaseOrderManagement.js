@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getPOsAPI } from '../../api/po';
+import Pagination from '../../components/common/Pagination';
 import {
     FileText,
     Plus,
@@ -20,6 +21,8 @@ const PurchaseOrderManagement = () => {
     const [pos, setPOs] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [page, setPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
 
     useEffect(() => {
         fetchPOs();
@@ -51,6 +54,10 @@ const PurchaseOrderManagement = () => {
         po.poNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
         po.supplier?.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    const totalFiltered = filteredPOs.length;
+    const startIndex = (page - 1) * pageSize;
+    const paginatedPOs = filteredPOs.slice(startIndex, startIndex + pageSize);
 
     if (isLoading) {
         return (
@@ -102,7 +109,7 @@ const PurchaseOrderManagement = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
-                            {filteredPOs.map((po) => (
+                            {paginatedPOs.map((po) => (
                                 <tr
                                     key={po._id}
                                     className="group hover:bg-slate-50/50 transition-all cursor-pointer"
@@ -143,7 +150,7 @@ const PurchaseOrderManagement = () => {
                                     </td>
                                 </tr>
                             ))}
-                            {filteredPOs.length === 0 && (
+                            {totalFiltered === 0 && (
                                 <tr>
                                     <td colSpan="5" className="px-8 py-20 text-center">
                                         <div className="flex flex-col items-center gap-4">
@@ -159,6 +166,17 @@ const PurchaseOrderManagement = () => {
                     </table>
                 </div>
             </div>
+
+            <Pagination
+                page={page}
+                pageSize={pageSize}
+                total={totalFiltered}
+                onPageChange={setPage}
+                onPageSizeChange={(newSize) => {
+                    setPageSize(newSize);
+                    setPage(1);
+                }}
+            />
         </div>
     );
 };
