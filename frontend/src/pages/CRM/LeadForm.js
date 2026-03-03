@@ -1,15 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import {
-    UserPlus,
     Save,
     ArrowLeft,
     Mail,
     Phone,
     Building2,
-    Globe,
     MessageSquare,
-    Info,
-    Calendar,
     Star
 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';

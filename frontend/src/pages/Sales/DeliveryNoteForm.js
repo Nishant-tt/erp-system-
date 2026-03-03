@@ -1,14 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {
     Truck,
-    Plus,
-    Trash2,
-    Save,
     ArrowLeft,
-    Package,
     Navigation,
-    Info,
-    Calendar,
     ShoppingBag
 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
