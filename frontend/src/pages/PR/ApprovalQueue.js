@@ -10,9 +10,7 @@ import {
     ShieldCheck,
     Loader2,
     IndianRupee,
-    User,
-    Building2,
-    AlertCircle
+    Building2
 } from 'lucide-react';
 
 const ApprovalQueue = () => {

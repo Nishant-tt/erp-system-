@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getPRByIdAPI, approvePRAPI, rejectPRAPI, submitPRAPI } from '../../api/pr';
 import {
     ArrowLeft,
-    ClipboardList,
     Clock,
     CheckCircle2,
     XCircle,
@@ -11,7 +10,6 @@ import {
     User,
     Building2,
     Calendar,
-    MessageSquare,
     Send,
     ThumbsUp,
     ThumbsDown,
@@ -33,7 +31,9 @@ const PRDetails = () => {
 
     useEffect(() => {
         fetchPRDetails();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
+
 
     const fetchPRDetails = async () => {
         try {

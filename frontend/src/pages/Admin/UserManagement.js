@@ -14,8 +14,7 @@ import {
     CheckCircle2,
     AlertCircle,
     Edit2,
-    Trash2,
-    MoreHorizontal
+    Trash2
 } from 'lucide-react';
 
 const UserManagement = () => {

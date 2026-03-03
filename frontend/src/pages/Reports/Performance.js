@@ -6,7 +6,6 @@ import {
     ArrowDownRight,
     Users,
     Clock,
-    ShoppingBag,
     IndianRupee,
     AlertTriangle,
     CheckCircle2

@@ -6,8 +6,6 @@ import {
     Plus,
     Search,
     ChevronRight,
-    Clock,
-    CheckCircle2,
     Package,
     Loader2,
     Calendar,

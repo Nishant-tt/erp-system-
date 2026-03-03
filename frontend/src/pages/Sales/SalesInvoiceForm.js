@@ -32,6 +32,7 @@ const SalesInvoiceForm = () => {
     useEffect(() => {
         fetchResources();
         if (id) fetchInvoice();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
 
     const fetchResources = async () => {
@@ -91,18 +92,6 @@ const SalesInvoiceForm = () => {
         } finally {
             setLoading(false);
         }
-    };
-
-    const calculateTotals = (items) => {
-        const subtotal = items.reduce((sum, i) => sum + (i.quantity * i.unitPrice), 0);
-        const taxTotal = subtotal * 0.18;
-        setFormData(prev => ({
-            ...prev,
-            items: items.map(i => ({ ...i, total: (i.quantity * i.unitPrice) * 1.18 })),
-            subtotal,
-            taxTotal,
-            grandTotal: subtotal + taxTotal
-        }));
     };
 
     const handleSubmit = async (e) => {

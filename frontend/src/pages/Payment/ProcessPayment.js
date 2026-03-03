@@ -3,17 +3,14 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { getInvoicesAPI } from '../../api/purchaseInvoice';
 import { createPaymentAPI } from '../../api/vendorPayment';
 import {
-    CreditCard,
     CheckCircle2,
     AlertCircle,
     ArrowLeft,
     Loader2,
     IndianRupee,
     Building,
-    Hash,
     Receipt,
     Wallet,
-    Calendar,
     Stamp,
     Banknote,
     ArrowUpRight
@@ -35,10 +32,11 @@ const ProcessPayment = () => {
     const [paymentMethod, setPaymentMethod] = useState('BANK_TRANSFER');
     const [transactionId, setTransactionId] = useState('');
     const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
+    // Add back the 'remarks' variable since you are using 'setRemarks'
     const [remarks, setRemarks] = useState('');
 
     useEffect(() => {
-        const fetchInvoices = async () => {
+    const fetchInvoices = async () => {
             try {
                 const data = await getInvoicesAPI();
                 setUnpaidInvoices(data.filter(inv => ['UNPAID', 'PARTIALLY_PAID'].includes(inv.status)));
@@ -216,6 +214,18 @@ const ProcessPayment = () => {
                                         onChange={(e) => setAmount(parseFloat(e.target.value) || 0)}
                                     />
                                 </div>
+                            </div>
+                            {/* Remarks Field */}
+                            <div className="space-y-4 pt-4">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">
+                                    Payment Remarks / Notes
+                                </label>
+                                <textarea
+                                    value={remarks}
+                                    onChange={(e) => setRemarks(e.target.value)}
+                                    placeholder="Add any internal notes about this payment..."
+                                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-3xl p-5 text-sm font-bold text-slate-900 focus:bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 transition-all outline-none min-h-[100px] resize-none"
+                                />
                             </div>
                         </div>
                     </div>

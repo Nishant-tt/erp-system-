@@ -6,13 +6,9 @@ import {
     FileText,
     Plus,
     Search,
-    Filter,
     ChevronRight,
     Clock,
-    CheckCircle2,
-    AlertCircle,
     Truck,
-    CircleDot,
     Loader2
 } from 'lucide-react';
 

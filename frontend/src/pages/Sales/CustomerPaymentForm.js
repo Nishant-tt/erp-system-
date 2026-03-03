@@ -31,6 +31,7 @@ const CustomerPaymentForm = () => {
     useEffect(() => {
         fetchResources();
         if (id) fetchPayment();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
 
     const fetchResources = async () => {

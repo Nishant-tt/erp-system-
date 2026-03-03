@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import { Mail, ArrowLeft, Loader2, ShieldCheck, CheckCircle2 } from 'lucide-react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 const ForgetPasswordPage = () => {
     const [email, setEmail] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     const [isSubmitted, setIsSubmitted] = useState(false);
-    const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();

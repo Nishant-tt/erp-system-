@@ -4,7 +4,6 @@ import {
     Plus,
     Search,
     Filter,
-    MoreHorizontal,
     Mail,
     Phone,
     Building2,

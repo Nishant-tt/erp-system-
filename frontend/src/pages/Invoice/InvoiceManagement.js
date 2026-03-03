@@ -5,13 +5,9 @@ import {
     Receipt,
     Plus,
     Search,
-    ChevronRight,
-    Clock,
     CheckCircle2,
     Loader2,
-    Calendar,
     Hash,
-    AlertCircle,
     ArrowRight
 } from 'lucide-react';
 

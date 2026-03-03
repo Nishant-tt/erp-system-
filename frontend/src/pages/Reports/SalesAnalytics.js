@@ -9,7 +9,6 @@ import {
     ArrowUpRight,
     ArrowDownRight,
     Calendar,
-    Filter,
     Download
 } from 'lucide-react';
 import { getOpportunitiesAPI } from '../../api/opportunity';
@@ -24,6 +23,7 @@ const SalesAnalytics = () => {
         monthlyData: [],
         topCustomers: []
     });
+    // Add back the 'loading' variable since you are using 'setLoading'
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -67,6 +67,8 @@ const SalesAnalytics = () => {
 
     return (
         <div className="p-8 pb-24 text-slate-900">
+            {loading && <div className="text-center py-12">Loading analytics...</div>}
+            
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                 <div>

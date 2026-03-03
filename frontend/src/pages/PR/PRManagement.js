@@ -1,17 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { getPRsAPI, submitPRAPI, approvePRAPI, rejectPRAPI } from '../../api/pr';
+import { getPRsAPI } from '../../api/pr';
 import {
     ClipboardList,
     Plus,
     Search,
-    Filter,
     Clock,
     CheckCircle2,
     XCircle,
     FileText,
     ChevronRight,
     Loader2,
-    MessageSquare,
     IndianRupee
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -25,7 +23,6 @@ const PRManagement = () => {
     const [statusFilter, setStatusFilter] = useState('ALL');
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
-    const userRole = localStorage.getItem('role');
 
     useEffect(() => {
         fetchPRs();

@@ -4,9 +4,6 @@ import {
     Plus,
     Search,
     Eye,
-    CheckCircle2,
-    Clock,
-    XCircle,
     Copy,
     Send,
     Loader2

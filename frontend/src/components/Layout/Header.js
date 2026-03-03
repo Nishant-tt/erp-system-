@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { getModulesAPI } from '../../api/modules';
-import { Search, Bell, HelpCircle, Menu, LayoutDashboard, ChevronRight, Calendar } from 'lucide-react';
+import { Search, Bell, Menu, LayoutDashboard, ChevronRight, Calendar } from 'lucide-react';
 
 const Header = ({ toggleSidebar, isSidebarOpen }) => {
     const [modules, setModules] = useState([]);

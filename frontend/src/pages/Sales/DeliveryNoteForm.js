@@ -32,6 +32,7 @@ const DeliveryNoteForm = () => {
     useEffect(() => {
         fetchResources();
         if (id) fetchDelivery();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
 
     const fetchResources = async () => {

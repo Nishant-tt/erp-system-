@@ -20,7 +20,6 @@ const OpportunityForm = () => {
 
     const [loading, setLoading] = useState(false);
     const [leads, setLeads] = useState([]);
-    const [customers, setCustomers] = useState([]);
 
     const [formData, setFormData] = useState({
         title: '',
@@ -40,6 +39,7 @@ const OpportunityForm = () => {
             // If leadId is present, we might want to fetch lead details to pre-fill Title
             fetchLeadForForm(leadId);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id, leadId]);
 
     const fetchResources = async () => {

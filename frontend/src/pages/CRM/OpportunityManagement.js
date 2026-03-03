@@ -5,8 +5,6 @@ import {
     Trophy,
     TrendingUp,
     Clock,
-    DollarSign,
-    MoreHorizontal,
     ArrowRight
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -15,6 +13,7 @@ import { getOpportunitiesAPI } from '../../api/opportunity';
 const OpportunityManagement = () => {
     const navigate = useNavigate();
     const [opportunities, setOpportunities] = useState([]);
+    // Add back the 'loading' variable since you are using 'setLoading'
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -36,7 +35,10 @@ const OpportunityManagement = () => {
     const stages = ["PROSPECTING", "QUALIFICATION", "PROPOSAL", "NEGOTIATION", "CLOSED_WON", "CLOSED_LOST"];
 
     return (
+        
         <div className="p-8 pb-24 text-slate-900">
+            {loading && <div className="text-center py-12">Loading opportunities...</div>}
+        
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                 <div>

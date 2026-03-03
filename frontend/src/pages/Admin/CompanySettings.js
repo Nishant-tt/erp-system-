@@ -12,8 +12,7 @@ import {
     Save,
     Loader2,
     CheckCircle2,
-    AlertCircle,
-    Image as ImageIcon
+    AlertCircle
 } from 'lucide-react';
 
 const CompanySettings = () => {

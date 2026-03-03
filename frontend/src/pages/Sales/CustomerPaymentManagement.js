@@ -4,13 +4,8 @@ import {
     Plus,
     Search,
     CreditCard,
-    CheckCircle2,
-    Clock,
-    User,
     ArrowRight,
-    Loader2,
-    Calendar,
-    Filter
+    Loader2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getCustomerPaymentsAPI } from '../../api/customerPayment';

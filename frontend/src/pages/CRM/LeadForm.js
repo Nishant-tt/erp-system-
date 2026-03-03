@@ -28,10 +28,6 @@ const LeadForm = () => {
         notes: ''
     });
 
-    useEffect(() => {
-        if (id) fetchLead();
-    }, [id]);
-
     const fetchLead = async () => {
         try {
             const data = await getLeadByIdAPI(id);
@@ -40,6 +36,11 @@ const LeadForm = () => {
             console.error('Error fetching lead:', error);
         }
     };
+
+    useEffect(() => {
+        if (id) fetchLead();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [id]); 
 
     const handleSubmit = async (e) => {
         e.preventDefault();

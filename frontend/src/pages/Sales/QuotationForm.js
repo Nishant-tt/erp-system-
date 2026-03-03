@@ -35,6 +35,7 @@ const QuotationForm = () => {
     useEffect(() => {
         fetchResources();
         if (id) fetchQuotation();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
 
     const fetchResources = async () => {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getTrialBalanceAPI } from '../../api/finance';
-import { Download, Printer, Filter, Calculator, Info } from 'lucide-react';
+import { Download, Printer, Calculator, Info } from 'lucide-react';
 
 const TrialBalance = () => {
     const [data, setData] = useState([]);

@@ -2,12 +2,11 @@ import React, { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import Footer from './Footer';
-import { Outlet, Navigate, useNavigate } from 'react-router-dom';
+import { Outlet, Navigate } from 'react-router-dom';
 
 const DashboardLayout = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const token = localStorage.getItem('token');
-    const navigate = useNavigate();
 
     useEffect(() => {
         const checkTokenExpiry = () => {
