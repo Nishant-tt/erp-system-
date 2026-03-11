@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getPRsAPI } from '../../api/pr';
 import { getSuppliersAPI } from '../../api/supplier';
@@ -116,8 +116,8 @@ const CreatePurchaseOrder = () => {
     };
 
     const calculateSubtotal = () => items.reduce((sum, item) => sum + (Number(item.taxableValue || item.totalCost || 0)), 0);
-    const calculateGstTotal = () => items.reduce((sum, item) => sum + (Number(item.gstAmount || 0)), 0);
-    const calculateGrandTotal = () => calculateSubtotal() + calculateGstTotal();
+    // const calculateGstTotal = () => items.reduce((sum, item) => sum + (Number(item.gstAmount || 0)), 0);
+    // const calculateGrandTotal = () => calculateSubtotal() + calculateGstTotal();
 
     const handleSubmit = async (e) => {
         e.preventDefault();

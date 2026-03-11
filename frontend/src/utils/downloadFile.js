@@ -5,7 +5,7 @@ export function downloadAxiosBlobResponse(response, fallbackFilename = "document
   const cd = response?.headers?.["content-disposition"] || response?.headers?.["Content-Disposition"];
   let filename = fallbackFilename;
   if (cd) {
-    const match = /filename\\*=UTF-8''([^;]+)|filename=\"?([^\";]+)\"?/i.exec(cd);
+    const match = /filename\*=UTF-8''([^;]+)|filename="?([^";]+)"?/i.exec(cd);
     filename = decodeURIComponent(match?.[1] || match?.[2] || filename);
   }
 

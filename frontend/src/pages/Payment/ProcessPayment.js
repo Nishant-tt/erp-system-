@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { getInvoicesAPI } from '../../api/purchaseInvoice';
 import { createPaymentAPI } from '../../api/vendorPayment';
@@ -54,7 +54,7 @@ const ProcessPayment = () => {
             }
         };
         fetchInvoices();
-    }, []);
+    }, [navigate]);
 
     const handleInvoiceSelect = (invId) => {
         const inv = unpaidInvoices.find(i => i._id === invId);
