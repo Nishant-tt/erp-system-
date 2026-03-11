@@ -1,244 +1,286 @@
-import React, { useState, useEffect } from 'react';
-import { getPRsAPI } from '../../api/pr';
-import {
-    ClipboardList,
-    Plus,
-    Search,
-    Clock,
-    CheckCircle2,
-    XCircle,
-    FileText,
-    ChevronRight,
-    Loader2,
-    IndianRupee,
-    Download
-} from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import Pagination from '../../components/common/Pagination';
+import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { getPRsAPI } from "../../api/pr";
+import Pagination from "../../components/common/Pagination";
+import { Loader2, Plus, Search } from "lucide-react";
 
+// PR table is flattened per line item so we can show Item Code/Description/Qty/UOM columns.
 const PRManagement = () => {
-    const navigate = useNavigate();
-    const [prs, setPrs] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [statusFilter, setStatusFilter] = useState('ALL');
-    const [page, setPage] = useState(1);
-    const [pageSize, setPageSize] = useState(10);
+  const navigate = useNavigate();
+  const [prs, setPrs] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ALL");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
-    useEffect(() => {
-        fetchPRs();
-    }, []);
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await getPRsAPI();
+        setPrs(data || []);
+      } catch (e) {
+        console.error("Error fetching PRs:", e);
+      } finally {
+        setIsLoading(false);
+      }
+    })();
+  }, []);
 
-    const fetchPRs = async () => {
-        try {
-            const data = await getPRsAPI();
-            setPrs(data);
-        } catch (error) {
-            console.error('Error fetching PRs:', error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const getStatusColor = (status) => {
-        switch (status) {
-            case 'DRAFT': return 'bg-slate-100 text-slate-600 border-slate-200';
-            case 'PENDING_APPROVAL': return 'bg-amber-50 text-amber-600 border-amber-100';
-            case 'APPROVED': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
-            case 'REJECTED': return 'bg-red-50 text-red-600 border-red-100';
-            default: return 'bg-slate-100 text-slate-600';
-        }
-    };
-
-    const getStatusIcon = (status) => {
-        switch (status) {
-            case 'DRAFT': return <FileText size={14} />;
-            case 'PENDING_APPROVAL': return <Clock size={14} className="animate-pulse" />;
-            case 'APPROVED': return <CheckCircle2 size={14} />;
-            case 'REJECTED': return <XCircle size={14} />;
-            default: return null;
-        }
-    };
-
-    const filteredPRs = prs.filter(pr => {
-        const matchesSearch = pr.prNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            pr.requestedBy?.name.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesStatus = statusFilter === 'ALL' || pr.status === statusFilter;
-        return matchesSearch && matchesStatus;
-    });
-
-    const totalFiltered = filteredPRs.length;
-    const startIndex = (page - 1) * pageSize;
-    const paginatedPRs = filteredPRs.slice(startIndex, startIndex + pageSize);
-
-    const downloadCsv = () => {
-        const rows = filteredPRs.map(pr => ({
-            prNumber: pr.prNumber,
-            status: pr.status,
-            department: pr.department?.name || '',
-            requestedBy: pr.requestedBy?.name || '',
-            totalAmount: pr.totalAmount,
-            createdAt: pr.createdAt
-        }));
-        const headers = Object.keys(rows[0] || { prNumber: '', status: '', department: '', requestedBy: '', totalAmount: '', createdAt: '' });
-        const csv = [
-            headers.join(','),
-            ...rows.map(r => headers.map(h => `"${String(r[h] ?? '').replaceAll('"', '""')}"`).join(','))
-        ].join('\n');
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `PRs_${new Date().toISOString().slice(0, 10)}.csv`;
-        a.click();
-        URL.revokeObjectURL(url);
-    };
-
-    if (isLoading) {
-        return (
-            <div className="flex items-center justify-center min-h-[400px]">
-                <Loader2 className="animate-spin text-primary" size={32} />
-            </div>
-        );
+  const rows = useMemo(() => {
+    const out = [];
+    for (const pr of prs || []) {
+      for (const it of pr.items || []) {
+        const item = it.item || {};
+        out.push({
+          prId: pr._id,
+          prNumber: pr.prNumber || "",
+          prDate: pr.prDate || pr.createdAt,
+          department: pr.department?.name || "",
+          requester: pr.requestedBy?.name || "",
+          itemCode: item.itemCode || "",
+          itemDescription: it.description || item.description || item.itemName || "",
+          qty: it.quantity ?? "",
+          uom: it.unit || item.uom || "",
+          requiredDate: pr.requiredDate || "",
+          estPrice: it.estimatedUnitCost ?? "",
+          lineTotal: it.totalCost ?? (Number(it.quantity || 0) * Number(it.estimatedUnitCost || 0)),
+          vendorSuggestion: pr.vendorSuggestion?.name || "",
+          budgetCode: pr.budgetCode || "",
+          costCenter: pr.costCenter || "",
+          priority: pr.priority || "",
+          remarks: pr.remarks || "",
+          approvalStatus: pr.status || "",
+        });
+      }
+      // If PR has no items, still show one row for header visibility
+      if (!pr.items || pr.items.length === 0) {
+        out.push({
+          prId: pr._id,
+          prNumber: pr.prNumber || "",
+          prDate: pr.prDate || pr.createdAt,
+          department: pr.department?.name || "",
+          requester: pr.requestedBy?.name || "",
+          itemCode: "",
+          itemDescription: "",
+          qty: "",
+          uom: "",
+          requiredDate: pr.requiredDate || "",
+          estPrice: "",
+          lineTotal: "",
+          vendorSuggestion: pr.vendorSuggestion?.name || "",
+          budgetCode: pr.budgetCode || "",
+          costCenter: pr.costCenter || "",
+          priority: pr.priority || "",
+          remarks: pr.remarks || "",
+          approvalStatus: pr.status || "",
+        });
+      }
     }
+    return out;
+  }, [prs]);
 
+  const filteredRows = useMemo(() => {
+    const s = searchTerm.trim().toLowerCase();
+    return rows.filter((r) => {
+      const matchesStatus = statusFilter === "ALL" || r.approvalStatus === statusFilter;
+      const matchesSearch =
+        !s ||
+        r.prNumber.toLowerCase().includes(s) ||
+        r.department.toLowerCase().includes(s) ||
+        r.requester.toLowerCase().includes(s) ||
+        r.itemCode.toLowerCase().includes(s) ||
+        r.itemDescription.toLowerCase().includes(s) ||
+        r.vendorSuggestion.toLowerCase().includes(s);
+      return matchesStatus && matchesSearch;
+    });
+  }, [rows, searchTerm, statusFilter]);
+
+  const totalFiltered = filteredRows.length;
+  const startIndex = (page - 1) * pageSize;
+  const paginated = filteredRows.slice(startIndex, startIndex + pageSize);
+
+
+  if (isLoading) {
     return (
-        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-8 px-0 sm:px-2 min-w-0 animate-in fade-in duration-500">
-            <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 sm:gap-6">
-                <div>
-                    <h1 className="text-3xl font-black text-slate-900 tracking-tight">Requisition Dashboard</h1>
-                    <p className="text-slate-500 font-medium">Manage and track your procurement requests.</p>
-                </div>
-                <button
-                    onClick={() => navigate('/prs/create')}
-                    className="flex items-center gap-3 px-8 py-4 bg-primary text-white rounded-[24px] font-black text-sm uppercase tracking-widest hover:bg-primary-hover transition-all shadow-xl shadow-primary/20 hover:-translate-y-1 active:translate-y-0"
-                >
-                    <Plus size={18} />
-                    New Requisition
-                </button>
-                <button
-                    onClick={downloadCsv}
-                    className="flex items-center gap-3 px-8 py-4 bg-white text-slate-700 rounded-[24px] font-black text-sm uppercase tracking-widest border-2 border-slate-100 hover:border-slate-200 transition-all shadow-sm hover:-translate-y-1 active:translate-y-0"
-                >
-                    <Download size={18} />
-                    Download
-                </button>
-            </div>
-
-            {/* Stats Row */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {[
-                    { label: 'Total PRs', count: prs.length, color: 'bg-white text-slate-900' },
-                    { label: 'Pending', count: prs.filter(p => p.status === 'PENDING_APPROVAL').length, color: 'bg-amber-500 text-white' },
-                    { label: 'Approved', count: prs.filter(p => p.status === 'APPROVED').length, color: 'bg-emerald-500 text-white' },
-                    { label: 'Drafts', count: prs.filter(p => p.status === 'DRAFT').length, color: 'bg-slate-900 text-white' }
-                ].map((stat, idx) => (
-                    <div key={idx} className={`${stat.color} p-6 rounded-[32px] border border-slate-200/60 shadow-sm`}>
-                        <p className={`text-[10px] font-black uppercase tracking-widest opacity-60 mb-1`}>{stat.label}</p>
-                        <p className="text-3xl font-black tracking-tighter">{stat.count}</p>
-                    </div>
-                ))}
-            </div>
-
-            {/* Filters */}
-            <div className="flex flex-col md:flex-row gap-4">
-                <div className="relative flex-1 group">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" size={18} />
-                    <input
-                        type="text"
-                        placeholder="Search by PR# or Requester..."
-                        className="w-full pl-12 pr-4 py-4 bg-white border-2 border-slate-100 rounded-2xl outline-none focus:border-primary/20 transition-all font-bold text-sm"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                </div>
-                <div className="flex flex-wrap gap-2">
-                    {['ALL', 'DRAFT', 'PENDING_APPROVAL', 'APPROVED', 'REJECTED'].map(status => (
-                        <button
-                            key={status}
-                            onClick={() => setStatusFilter(status)}
-                            className={`px-4 sm:px-6 py-3 sm:py-4 rounded-2xl border-2 text-[10px] font-black uppercase tracking-widest transition-all ${statusFilter === status
-                                    ? 'bg-slate-900 border-slate-900 text-white'
-                                    : 'bg-white border-slate-100 text-slate-400 hover:border-slate-200'
-                                }`}
-                        >
-                            {status === 'PENDING_APPROVAL' ? 'Pending' : status === 'ALL' ? 'Total' : status}
-                        </button>
-                    ))}
-                </div>
-            </div>
-
-            {/* PR List */}
-            <div className="grid grid-cols-1 gap-4">
-                {paginatedPRs.map((pr) => (
-                    <div
-                        key={pr._id}
-                        onClick={() => navigate(`/prs/${pr._id}`)}
-                        className="bg-white p-6 rounded-[32px] border border-slate-200/60 shadow-sm hover:shadow-xl hover:border-primary/20 transition-all group cursor-pointer flex flex-col md:flex-row md:items-center gap-6"
-                    >
-                        <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110">
-                            <ClipboardList className="text-slate-400 group-hover:text-primary" size={24} />
-                        </div>
-
-                        <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-1">
-                                <span className="text-lg font-black text-slate-900 tracking-tight">{pr.prNumber}</span>
-                                <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${getStatusColor(pr.status)} flex items-center gap-1.5`}>
-                                    {getStatusIcon(pr.status)}
-                                    {pr.status.replace('_', ' ')}
-                                </span>
-                            </div>
-                            <div className="flex flex-wrap items-center gap-4 text-xs font-bold text-slate-400">
-                                <span className="flex items-center gap-1.5 uppercase tracking-widest">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-primary/40"></div>
-                                    {pr.department?.name}
-                                </span>
-                                <span className="flex items-center gap-1.5 uppercase tracking-widest">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-slate-200"></div>
-                                    Requested by: <span className="text-slate-600">{pr.requestedBy?.name}</span>
-                                </span>
-                                <span>{new Date(pr.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
-                            </div>
-                        </div>
-
-                        <div className="text-right flex flex-col items-end gap-2">
-                            <div className="flex items-center gap-1 text-2xl font-black text-slate-900 tracking-tighter">
-                                <IndianRupee size={20} className="text-slate-400" />
-                                {pr.totalAmount.toLocaleString('en-IN')}
-                            </div>
-                            <div className="flex items-center gap-2 text-[10px] font-black uppercase text-primary tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
-                                View Details
-                                <ChevronRight size={14} />
-                            </div>
-                        </div>
-                    </div>
-                ))}
-
-                {totalFiltered === 0 && (
-                    <div className="py-20 flex flex-col items-center justify-center text-center space-y-4">
-                        <div className="w-20 h-20 bg-slate-50 rounded-[40px] flex items-center justify-center text-slate-200">
-                            <FileText size={40} />
-                        </div>
-                        <div className="max-w-xs">
-                            <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">No Requisitions Found</h3>
-                            <p className="text-sm text-slate-500 font-medium">Either you haven't raised any requests, or they don't match your filters.</p>
-                        </div>
-                    </div>
-                )}
-            </div>
-
-            <Pagination
-                page={page}
-                pageSize={pageSize}
-                total={totalFiltered}
-                onPageChange={setPage}
-                onPageSizeChange={(newSize) => {
-                    setPageSize(newSize);
-                    setPage(1);
-                }}
-            />
-        </div>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="animate-spin text-primary" size={32} />
+      </div>
     );
+  }
+
+  return (
+    <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-0 sm:px-2 min-w-0 animate-in fade-in duration-500 pb-10">
+      <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 sm:gap-4">
+        <div>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Purchase Requisitions (PR)</h1>
+          <p className="text-slate-500 text-sm font-medium">Line-item view of requisitions for accurate item-level tracking.</p>
+        </div>
+        <button
+          onClick={() => navigate("/prs/create")}
+          className="flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-2xl font-bold hover:bg-primary-hover transition-all shadow-lg shadow-primary/20 active:scale-95"
+        >
+          <Plus size={18} />
+          New PR
+        </button>
+      </div>
+
+      <div className="flex flex-col md:flex-row gap-3 items-start md:items-center justify-between">
+        <div className="relative group w-full md:max-w-md">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" size={18} />
+          <input
+            type="text"
+            placeholder="Search PR, dept, requester, item..."
+            className="w-full pl-12 pr-4 py-3.5 bg-white border-2 border-slate-100 rounded-2xl outline-none focus:border-primary/20 transition-all font-bold text-sm"
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setPage(1);
+            }}
+          />
+        </div>
+
+        <div className="flex items-center gap-2">
+          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Approval Status</label>
+          <select
+            className="px-4 py-3 bg-white border-2 border-slate-100 rounded-2xl outline-none focus:border-primary/20 font-bold text-sm"
+            value={statusFilter}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setPage(1);
+            }}
+          >
+            <option value="ALL">All</option>
+            <option value="DRAFT">DRAFT</option>
+            <option value="PENDING_APPROVAL">PENDING_APPROVAL</option>
+            <option value="APPROVED">APPROVED</option>
+            <option value="REJECTED">REJECTED</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Mobile Cards */}
+      <div className="grid grid-cols-1 gap-3 md:hidden">
+        {paginated.map((r, idx) => (
+          <button
+            key={`${r.prId}-${r.itemCode}-${idx}`}
+            onClick={() => navigate(`/prs/${r.prId}`)}
+            className="text-left bg-white rounded-[24px] border border-slate-200/60 p-4 shadow-sm active:scale-[0.99] transition"
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <div className="font-black text-slate-900 truncate">{r.prNumber}</div>
+                <div className="text-[11px] font-bold text-slate-500 truncate">
+                  {r.department} · {r.requester}
+                </div>
+              </div>
+              <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border bg-slate-50 text-slate-600 border-slate-100 shrink-0">
+                {r.approvalStatus}
+              </span>
+            </div>
+            <div className="mt-3 text-[11px] font-bold text-slate-700">
+              <span className="font-black text-indigo-600 font-mono">{r.itemCode || "-"}</span> {r.itemDescription ? `· ${r.itemDescription}` : ""}
+            </div>
+            <div className="mt-2 grid grid-cols-2 gap-2 text-[11px] font-bold text-slate-600">
+              <div>Qty: <span className="font-black text-slate-900">{r.qty || "-"}</span> {r.uom}</div>
+              <div className="text-right">INR {Number(r.lineTotal || 0).toLocaleString("en-IN")}</div>
+            </div>
+          </button>
+        ))}
+        {paginated.length === 0 && (
+          <div className="px-8 py-16 text-center text-slate-400 font-bold uppercase text-xs tracking-widest">
+            No PR rows found
+          </div>
+        )}
+      </div>
+
+      {/* Desktop Table */}
+      <div className="bg-white rounded-[32px] shadow-sm border border-slate-200/60 overflow-hidden hidden md:block">
+        <div className="table-responsive custom-scrollbar">
+          <table className="w-full text-left border-collapse min-w-[1400px]">
+            <thead>
+              <tr className="bg-slate-50/50 border-b border-slate-100">
+                {[
+                  "PR Number",
+                  "PR Date",
+                  "Department / Requester",
+                  "Item Code",
+                  "Item Description",
+                  "Quantity Required",
+                  "UOM",
+                  "Required Date",
+                  "Estimated Price",
+                  "Total Estimated Cost",
+                  "Vendor Suggestion",
+                  "Budget Code / Cost Center",
+                  "Priority",
+                  "Remarks / Notes",
+                  "Approval Status",
+                ].map((h) => (
+                  <th key={h} className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {paginated.map((r, idx) => (
+                <tr
+                  key={`${r.prId}-${r.itemCode}-${idx}`}
+                  className="group hover:bg-slate-50/50 transition-all cursor-pointer"
+                  onClick={() => navigate(`/prs/${r.prId}`)}
+                >
+                  <td className="px-6 py-4 font-black text-slate-900">{r.prNumber}</td>
+                  <td className="px-6 py-4 text-xs font-bold text-slate-600">{r.prDate ? new Date(r.prDate).toLocaleDateString("en-IN") : ""}</td>
+                  <td className="px-6 py-4">
+                    <div className="text-xs font-bold text-slate-700">{r.department}</div>
+                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{r.requester}</div>
+                  </td>
+                  <td className="px-6 py-4 text-xs font-black text-indigo-600 font-mono">{r.itemCode}</td>
+                  <td className="px-6 py-4 text-xs font-bold text-slate-700">{r.itemDescription}</td>
+                  <td className="px-6 py-4 text-xs font-black text-slate-900">{r.qty}</td>
+                  <td className="px-6 py-4 text-xs font-bold text-slate-600">{r.uom}</td>
+                  <td className="px-6 py-4 text-xs font-bold text-slate-600">{r.requiredDate ? new Date(r.requiredDate).toLocaleDateString("en-IN") : ""}</td>
+                  <td className="px-6 py-4 text-xs font-black text-slate-900">INR {Number(r.estPrice || 0).toLocaleString("en-IN")}</td>
+                  <td className="px-6 py-4 text-xs font-black text-slate-900">INR {Number(r.lineTotal || 0).toLocaleString("en-IN")}</td>
+                  <td className="px-6 py-4 text-xs font-bold text-slate-700">{r.vendorSuggestion || "-"}</td>
+                  <td className="px-6 py-4 text-xs font-bold text-slate-700">
+                    <div>{r.budgetCode || "-"}</div>
+                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{r.costCenter || "-"}</div>
+                  </td>
+                  <td className="px-6 py-4 text-xs font-black text-slate-700">{r.priority || "-"}</td>
+                  <td className="px-6 py-4 text-xs font-bold text-slate-600 max-w-[260px] truncate">{r.remarks || "-"}</td>
+                  <td className="px-6 py-4">
+                    <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border bg-slate-50 text-slate-600 border-slate-100">
+                      {r.approvalStatus}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+              {paginated.length === 0 && (
+                <tr>
+                  <td colSpan={15} className="px-8 py-16 text-center text-slate-400 font-bold uppercase text-xs tracking-widest">
+                    No PR rows found
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <Pagination
+        page={page}
+        pageSize={pageSize}
+        total={totalFiltered}
+        onPageChange={setPage}
+        onPageSizeChange={(newSize) => {
+          setPageSize(newSize);
+          setPage(1);
+        }}
+      />
+    </div>
+  );
 };
 
 export default PRManagement;

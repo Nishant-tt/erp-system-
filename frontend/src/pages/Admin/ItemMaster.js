@@ -185,9 +185,9 @@ const ItemMaster = () => {
     }
 
     return (
-        <div className="max-w-7xl mx-auto space-y-6">
+        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-0 sm:px-2 min-w-0">
             {/* Header */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 sm:gap-4">
                 <div>
                     <h1 className="text-2xl font-black text-slate-900 tracking-tight">Item Master</h1>
                     <p className="text-slate-500 text-sm font-medium">Manage your product and material catalogue.</p>
@@ -261,16 +261,16 @@ const ItemMaster = () => {
             </div>
 
             {/* Table */}
-            <div className="bg-white rounded-3xl shadow-sm border border-slate-200/60 overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
+            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-slate-200/60 overflow-hidden">
+                <div className="table-responsive overflow-x-auto custom-scrollbar">
+                    <table className="w-full text-left border-collapse min-w-[640px]">
                         <thead>
                             <tr className="bg-slate-50/50 border-b border-slate-100">
-                                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Item</th>
-                                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Category</th>
-                                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">UOM / HSN</th>
-                                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">GST / Rate</th>
-                                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Actions</th>
+                                <th className="px-3 sm:px-6 py-3 sm:py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Item</th>
+                                <th className="px-3 sm:px-6 py-3 sm:py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Category</th>
+                                <th className="px-3 sm:px-6 py-3 sm:py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">UOM / HSN</th>
+                                <th className="px-3 sm:px-6 py-3 sm:py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">GST / Rate</th>
+                                <th className="px-3 sm:px-6 py-3 sm:py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
@@ -351,28 +351,28 @@ const ItemMaster = () => {
 
             {/* Modal */}
             {showModal && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
                     <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setShowModal(false)} />
-                    <div className="relative w-full max-w-4xl bg-white rounded-[40px] shadow-2xl border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
+                    <div className="relative w-full max-w-4xl max-h-[90vh] sm:max-h-[90vh] bg-white rounded-t-3xl sm:rounded-[40px] shadow-2xl border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col">
 
                         {/* Modal Header */}
-                        <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0">
-                            <div>
-                                <h3 className="text-2xl font-black text-slate-900 tracking-tight">
+                        <div className="p-4 sm:p-6 md:p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0 gap-3">
+                            <div className="min-w-0 flex-1">
+                                <h3 className="text-lg sm:text-2xl font-black text-slate-900 tracking-tight truncate">
                                     {editingItem ? 'Edit Item' : 'Add New Item'}
                                 </h3>
-                                <p className="text-sm text-slate-500 font-medium">
+                                <p className="text-xs sm:text-sm text-slate-500 font-medium truncate">
                                     {editingItem ? 'Update item master details.' : 'Register a new product or material.'}
                                 </p>
                             </div>
-                            <button onClick={() => setShowModal(false)} className="p-3 hover:bg-white rounded-2xl transition-colors text-slate-400 hover:text-slate-600">
-                                <X size={24} />
+                            <button onClick={() => setShowModal(false)} className="p-2 sm:p-3 hover:bg-white rounded-2xl transition-colors text-slate-400 hover:text-slate-600 shrink-0" aria-label="Close">
+                                <X size={22} className="sm:w-6 sm:h-6" />
                             </button>
                         </div>
 
                         {/* Modal Body */}
-                        <div className="p-8 overflow-y-auto custom-scrollbar flex-1">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <div className="p-4 sm:p-6 md:p-8 overflow-y-auto custom-scrollbar flex-1 min-h-0">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
 
                                 {/* LEFT: Identity & Classification */}
                                 <div className="space-y-5">
@@ -572,7 +572,7 @@ const ItemMaster = () => {
                         </div>
 
                         {/* Modal Footer */}
-                        <div className="p-8 border-t border-slate-100 bg-slate-50/50 flex gap-4 shrink-0">
+                        <div className="p-4 sm:p-6 md:p-8 border-t border-slate-100 bg-slate-50/50 flex flex-col-reverse sm:flex-row gap-3 sm:gap-4 shrink-0">
                             <button
                                 type="button"
                                 onClick={() => setShowModal(false)}

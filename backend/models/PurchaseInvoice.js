@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+﻿const mongoose = require("mongoose");
 
 const purchaseInvoiceSchema = new mongoose.Schema(
     {
@@ -9,6 +9,7 @@ const purchaseInvoiceSchema = new mongoose.Schema(
         supplier: { type: mongoose.Schema.Types.ObjectId, ref: "Supplier", required: true },
         items: [{
             item: { type: mongoose.Schema.Types.ObjectId, ref: "ItemMaster" },
+            description: { type: String, default: "" }, // Item Description for reports
             quantity: { type: Number, required: true },
             unitCost: { type: Number, required: true },
             taxAmount: { type: Number, default: 0 },
@@ -17,9 +18,35 @@ const purchaseInvoiceSchema = new mongoose.Schema(
         subtotal: { type: Number, required: true },
         taxTotal: { type: Number, default: 0 },
         grandTotal: { type: Number, required: true },
+
+        // 3-way match + approval workflow (separate from payment status)
+        matchStatus: {
+            type: String,
+            enum: ["PENDING", "MATCHED", "MISMATCHED"],
+            default: "PENDING"
+        },
+        matchErrors: [{ type: String, default: [] }],
+        matchNotes: { type: String, default: "" },
+        approvalStatus: {
+            type: String,
+            enum: ["PENDING_APPROVAL", "APPROVED", "REJECTED", "ON_HOLD"],
+            default: "PENDING_APPROVAL"
+        },
+        approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        approvedAt: { type: Date },
+        rejectedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        rejectedAt: { type: Date },
+        approvalComments: { type: String, default: "" },
+
+        // Finance posting status (Journal Entry creation)
+        financePosted: { type: Boolean, default: false },
+        financePostedAt: { type: Date },
+        financeReference: { type: String, default: "" },
+
         amountPaid: { type: Number, default: 0 },
         balanceAmount: { type: Number, required: true },
         invoiceDate: { type: Date, required: true },
+        paymentTerms: { type: String, default: "" },
         dueDate: { type: Date },
         status: {
             type: String,

@@ -7,15 +7,27 @@ import { Loader2, ArrowLeft, FileText, CheckCircle2, AlertCircle } from "lucide-
 
 export default function CreateProcurementQuotation() {
   const navigate = useNavigate();
+  const userRole = localStorage.getItem("role");
   const [prs, setPrs] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
   const [selectedPrId, setSelectedPrId] = useState("");
   const [selectedSupplierIds, setSelectedSupplierIds] = useState([]);
+  const [rfqDate, setRfqDate] = useState(new Date().toISOString().split("T")[0]);
+  const [requestedDeliveryDate, setRequestedDeliveryDate] = useState("");
+  const [quotationDueDate, setQuotationDueDate] = useState("");
+  const [termsConditions, setTermsConditions] = useState("");
+  const [currency, setCurrency] = useState("INR");
+  const [remarks, setRemarks] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
 
   useEffect(() => {
+    const allowedRoles = ["Admin", "Purchase Manager"];
+    if (!allowedRoles.includes(userRole)) {
+      navigate("/dashboard");
+      return;
+    }
     const load = async () => {
       try {
         const [prsData, suppliersData] = await Promise.all([getPRsAPI(), getSuppliersAPI()]);
@@ -28,9 +40,17 @@ export default function CreateProcurementQuotation() {
       }
     };
     load();
-  }, []);
+  }, [navigate, userRole]);
 
   const selectedPR = useMemo(() => prs.find((p) => p._id === selectedPrId), [prs, selectedPrId]);
+
+  useEffect(() => {
+    // Auto-fill requested delivery date from PR requiredDate
+    if (selectedPR?.requiredDate) {
+      const d = new Date(selectedPR.requiredDate);
+      if (!Number.isNaN(d.getTime())) setRequestedDeliveryDate(d.toISOString().split("T")[0]);
+    }
+  }, [selectedPR]);
 
   // Suggested suppliers = union of preferredSupplier per item (if present).
   const suggestedSupplierIds = useMemo(() => {
@@ -68,6 +88,12 @@ export default function CreateProcurementQuotation() {
       const q = await createProcurementQuotationFromPRAPI(selectedPrId, {
         suppliers: selectedSupplierIds,
         status,
+        rfqDate,
+        requestedDeliveryDate,
+        quotationDueDate,
+        termsConditions,
+        currency,
+        remarks,
       });
       setMessage({ type: "success", text: "Quotation created successfully." });
       setTimeout(() => navigate(`/procurement-quotations/${q._id}`), 800);
@@ -175,6 +201,72 @@ export default function CreateProcurementQuotation() {
         <div className="space-y-6">
           <div className="bg-white rounded-[40px] p-8 shadow-sm border border-slate-200/60 space-y-4">
             <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest border-b border-slate-100 pb-4">
+              RFQ Details
+            </h3>
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">RFQ Date</label>
+                <input
+                  type="date"
+                  className="w-full px-5 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-primary/20 font-bold text-sm"
+                  value={rfqDate}
+                  onChange={(e) => setRfqDate(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Requested Delivery Date</label>
+                <input
+                  type="date"
+                  className="w-full px-5 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-primary/20 font-bold text-sm"
+                  value={requestedDeliveryDate}
+                  onChange={(e) => setRequestedDeliveryDate(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Quotation Due Date</label>
+                <input
+                  type="date"
+                  className="w-full px-5 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-primary/20 font-bold text-sm"
+                  value={quotationDueDate}
+                  onChange={(e) => setQuotationDueDate(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Currency</label>
+                <select
+                  className="w-full px-5 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-primary/20 font-bold text-sm"
+                  value={currency}
+                  onChange={(e) => setCurrency(e.target.value)}
+                >
+                  <option value="INR">INR</option>
+                  <option value="USD">USD</option>
+                  <option value="EUR">EUR</option>
+                  <option value="GBP">GBP</option>
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Terms & Conditions</label>
+                <textarea
+                  className="w-full px-5 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-3xl outline-none focus:border-primary/20 font-bold text-sm min-h-[90px] resize-none"
+                  value={termsConditions}
+                  onChange={(e) => setTermsConditions(e.target.value)}
+                  placeholder="Payment, delivery, warranty, etc."
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Remarks</label>
+                <textarea
+                  className="w-full px-5 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-3xl outline-none focus:border-primary/20 font-bold text-sm min-h-[70px] resize-none"
+                  value={remarks}
+                  onChange={(e) => setRemarks(e.target.value)}
+                  placeholder="Any additional notes for vendors..."
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-[40px] p-8 shadow-sm border border-slate-200/60 space-y-4">
+            <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest border-b border-slate-100 pb-4">
               Supplier Selection
             </h3>
             <p className="text-xs text-slate-500 font-bold">
@@ -246,4 +338,3 @@ export default function CreateProcurementQuotation() {
     </div>
   );
 }
-

@@ -34,3 +34,10 @@ export const getPRByIdAPI = async (id) => {
     const response = await axiosInstance.get(`/api/prs/${id}`);
     return response.data;
 };
+
+export const exportPRAPI = async (id, format = "pdf") => {
+    const response = await axiosInstance.get(`/api/prs/${id}/export/${format}`, {
+        responseType: "blob"
+    });
+    return response;
+};

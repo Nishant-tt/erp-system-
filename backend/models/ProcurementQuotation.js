@@ -14,9 +14,16 @@ const pqItemSchema = new mongoose.Schema({
 
 const procurementQuotationSchema = new mongoose.Schema(
   {
-    quotationNumber: { type: String, unique: true },
+    quotationNumber: { type: String, unique: true }, // Used as RFQ Number in UI
+    rfqDate: { type: Date, default: Date.now }, // RFQ Date
     prReference: { type: mongoose.Schema.Types.ObjectId, ref: "PR", required: true },
     suppliers: [{ type: mongoose.Schema.Types.ObjectId, ref: "Supplier" }],
+    // RFQ header fields
+    requestedDeliveryDate: { type: Date }, // Requested Delivery Date
+    quotationDueDate: { type: Date }, // Quotation Due Date
+    termsConditions: { type: String, default: "" }, // Terms & Conditions
+    currency: { type: String, default: "INR" }, // Dropdown in UI
+    remarks: { type: String, default: "" },
     items: [pqItemSchema],
     subtotal: { type: Number, required: true, default: 0 },
     gstTotal: { type: Number, required: true, default: 0 },
@@ -52,4 +59,3 @@ procurementQuotationSchema.pre("save", async function () {
 });
 
 module.exports = mongoose.model("ProcurementQuotation", procurementQuotationSchema);
-

@@ -1,4 +1,5 @@
 const PR = require("../models/PR");
+const { buildPdfBuffer, buildDocxBuffer } = require("../utils/exportDocs");
 
 exports.createPR = async (req, res) => {
     try {
@@ -15,6 +16,7 @@ exports.createPR = async (req, res) => {
         const populatedPR = await PR.findById(pr._id)
             .populate("requestedBy", "name email")
             .populate("department", "name code")
+            .populate("vendorSuggestion", "code name contact")
             .populate("items.item");
         res.status(201).json(populatedPR);
     } catch (error) {
@@ -42,6 +44,7 @@ exports.getPRs = async (req, res) => {
             .populate("requestedBy", "name email")
             .populate("department", "name code")
             .populate("approver", "name")
+            .populate("vendorSuggestion", "code name contact")
             .populate("items.item")
             .sort({ createdAt: -1 });
 
@@ -57,6 +60,7 @@ exports.getPRById = async (req, res) => {
             .populate("requestedBy", "name email")
             .populate("department", "name code")
             .populate("approver", "name")
+            .populate("vendorSuggestion", "code name contact")
             .populate("items.item");
 
         if (!pr) return res.status(404).json({ message: "PR not found" });
@@ -138,5 +142,66 @@ exports.rejectPR = async (req, res) => {
         res.json(pr);
     } catch (error) {
         res.status(400).json({ message: "Error rejecting PR", error: error.message });
+    }
+};
+
+exports.exportPR = async (req, res) => {
+    try {
+        const format = String(req.params.format || "pdf").toLowerCase();
+        if (!["pdf", "docx"].includes(format)) {
+            return res.status(400).json({ message: "Invalid export format. Use pdf or docx." });
+        }
+
+        const pr = await PR.findById(req.params.id)
+            .populate("requestedBy", "name email")
+            .populate("department", "name code")
+            .populate("approver", "name")
+            .populate("vendorSuggestion", "code name contact")
+            .populate("items.item");
+
+        if (!pr) return res.status(404).json({ message: "PR not found" });
+
+        const title = `Purchase Requisition ${pr.prNumber || ""}`.trim();
+        const meta = [
+            ["PR Number", pr.prNumber],
+            ["PR Date", pr.prDate ? new Date(pr.prDate).toLocaleDateString("en-IN") : ""],
+            ["Department", pr.department?.name || ""],
+            ["Requester", pr.requestedBy?.name || ""],
+            ["Required Date", pr.requiredDate ? new Date(pr.requiredDate).toLocaleDateString("en-IN") : ""],
+            ["Budget Code", pr.budgetCode || ""],
+            ["Cost Center", pr.costCenter || ""],
+            ["Priority", pr.priority || ""],
+            ["Vendor Suggestion", pr.vendorSuggestion?.name || ""],
+            ["Approval Status", pr.status || ""],
+        ];
+
+        const columns = ["Item Code", "Item Description", "Qty", "UOM", "Est Unit Cost", "Line Total"];
+        const rows = (pr.items || []).map((it) => ([
+            it.item?.itemCode || "",
+            it.description || it.item?.itemName || "",
+            it.quantity ?? "",
+            it.unit || it.item?.uom || "",
+            it.estimatedUnitCost ?? "",
+            it.totalCost ?? (Number(it.quantity || 0) * Number(it.estimatedUnitCost || 0)),
+        ]));
+
+        let buffer;
+        let contentType;
+        let filename;
+        if (format === "pdf") {
+            buffer = await buildPdfBuffer({ title, meta, columns, rows });
+            contentType = "application/pdf";
+            filename = `${pr.prNumber || "PR"}.pdf`;
+        } else {
+            buffer = await buildDocxBuffer({ title, meta, columns, rows });
+            contentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+            filename = `${pr.prNumber || "PR"}.docx`;
+        }
+
+        res.setHeader("Content-Type", contentType);
+        res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+        res.send(buffer);
+    } catch (error) {
+        res.status(400).json({ message: "Error exporting PR", error: error.message });
     }
 };

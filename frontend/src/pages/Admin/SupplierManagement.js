@@ -177,7 +177,7 @@ const SupplierManagement = () => {
     }
 
     return (
-        <div className="max-w-7xl mx-auto space-y-6">
+        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-0 sm:px-2 min-w-0">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h1 className="text-2xl font-black text-slate-900 tracking-tight">Supplier Master</h1>
@@ -215,8 +215,8 @@ const SupplierManagement = () => {
             )}
 
             <div className="bg-white rounded-3xl shadow-sm border border-slate-200/60 overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
+                <div className="table-responsive custom-scrollbar">
+                    <table className="w-full text-left border-collapse min-w-[600px]">
                         <thead>
                             <tr className="bg-slate-50/50 border-b border-slate-100">
                                 <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Supplier</th>

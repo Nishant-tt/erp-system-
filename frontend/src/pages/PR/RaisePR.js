@@ -205,7 +205,8 @@ const RaisePR = () => {
         let error = '';
         if (field === 'item' && !value) error = 'Required';
         if (field === 'quantity' && (isNaN(value) || value <= 0)) error = 'Min 1';
-        if (field === 'estimatedUnitCost' && (isNaN(value) || value <= 0)) error = 'Required';
+        // Estimated Unit Cost is optional per PR columns; allow 0 but disallow negatives
+        if (field === 'estimatedUnitCost' && (isNaN(value) || value < 0)) error = 'Invalid';
 
         const newErrors = [...itemErrors];
         newErrors[index][field] = error;
@@ -218,7 +219,7 @@ const RaisePR = () => {
 
     const handleSubmit = async (status = 'DRAFT') => {
         // Validation
-        const validItems = items.filter(item => item.item && item.quantity > 0 && item.estimatedUnitCost > 0)
+        const validItems = items.filter(item => item.item && item.quantity > 0 && item.estimatedUnitCost >= 0)
             .map(item => ({
                 item: item.item,
                 description: item.description,

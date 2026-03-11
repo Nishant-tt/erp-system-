@@ -27,12 +27,44 @@ const RoleManagement = () => {
         permissions: []
     });
 
-    const availablePermissions = [
-        "PR_CREATE", "PR_APPROVE", "PR_VIEW_ALL",
-        "PO_GENERATE", "PO_VIEW_ALL",
-        "SUPPLIER_MANAGE", "SUPPLIER_VIEW",
-        "ADMIN_ACCESS", "REPORTS_VIEW"
+    const permissionScopes = [
+        {
+            key: 'sales',
+            label: 'Sales',
+            actions: ['view', 'create', 'update', 'approve', '_delete', '_adjust', '_post']
+        },
+        {
+            key: 'crm',
+            label: 'CRM',
+            actions: ['view', 'create', 'update', '_delete', '_adjust', '_post']
+        },
+        {
+            key: 'procurement',
+            label: 'Procurement',
+            actions: ['view', 'create', 'update', 'approve', '_delete', '_adjust', '_post']
+        },
+        {
+            key: 'reports',
+            label: 'Reports',
+            actions: ['view', '_delete', '_adjust', '_post']
+        },
+        {
+            key: 'finance',
+            label: 'Financial',
+            actions: ['view', 'create', 'update', 'approve', '_delete', '_adjust', '_post']
+        },
+        {
+            key: 'admin',
+            label: 'Admin',
+            actions: ['view', 'create', 'update', 'delete', '_delete', '_adjust', '_post']
+        },
     ];
+
+    const knownPermissions = new Set(
+        permissionScopes.flatMap((s) => s.actions.map((a) => `${s.key}.${a}`))
+    );
+
+    const [customPermission, setCustomPermission] = useState('');
 
     useEffect(() => {
         fetchRoles();
@@ -71,6 +103,19 @@ const RoleManagement = () => {
                 ? prev.permissions.filter(p => p !== perm)
                 : [...prev.permissions, perm]
         }));
+    };
+
+    const handleAddCustomPermission = () => {
+        const raw = customPermission.trim();
+        if (!raw) return;
+        const normalized = raw;
+        setFormData((prev) => ({
+            ...prev,
+            permissions: prev.permissions.includes(normalized)
+                ? prev.permissions
+                : [...prev.permissions, normalized],
+        }));
+        setCustomPermission('');
     };
 
     const validateForm = () => {
@@ -128,7 +173,7 @@ const RoleManagement = () => {
     }
 
     return (
-        <div className="max-w-7xl mx-auto space-y-6">
+        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-0 sm:px-2 min-w-0">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h1 className="text-2xl font-black text-slate-900 tracking-tight">Role & Permissions</h1>
@@ -151,7 +196,7 @@ const RoleManagement = () => {
                 </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {roles.map((role) => (
                     <div key={role._id} className="bg-white p-6 rounded-[32px] border border-slate-200/60 shadow-sm hover:shadow-md transition-all group relative">
                         <div className="flex justify-between items-start mb-4">
@@ -184,23 +229,37 @@ const RoleManagement = () => {
 
             {/* Create/Edit Role Modal */}
             {showModal && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setShowModal(false)} />
-                    <div className="relative w-full max-w-2xl bg-white rounded-[32px] shadow-2xl border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-200">
-                        <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                            <div>
-                                <h3 className="text-xl font-black text-slate-900 tracking-tight">
-                                    {editingRole ? 'Edit Role' : 'Create New Role'}
-                                </h3>
-                                <p className="text-xs text-slate-500 font-medium">Define a new access group and assign permissions.</p>
+                <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 md:p-6">
+                    <div
+                        className="absolute inset-0 bg-slate-900/50 backdrop-blur-md"
+                        onClick={() => setShowModal(false)}
+                    />
+                    <div className="relative w-full max-w-3xl max-h-[90vh] bg-gradient-to-b from-white to-slate-50 rounded-t-3xl sm:rounded-[32px] shadow-[0_24px_80px_rgba(15,23,42,0.35)] border border-slate-200/80 overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col">
+                        <div className="px-6 sm:px-8 py-5 border-b border-slate-200/80 flex items-center justify-between bg-gradient-to-r from-slate-50 to-slate-100/60">
+                            <div className="flex items-start gap-3">
+                                <div className="w-9 h-9 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shadow-sm">
+                                    <Shield size={18} />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-black text-slate-900 tracking-tight">
+                                        {editingRole ? 'Edit Role' : 'Create New Role'}
+                                    </h3>
+                                    <p className="text-xs text-slate-500 font-medium">
+                                        Define a new access group and fine-tune module permissions.
+                                    </p>
+                                </div>
                             </div>
-                            <button onClick={() => setShowModal(false)} className="p-2 hover:bg-white rounded-xl transition-colors text-slate-400 hover:text-slate-600">
+                            <button
+                                onClick={() => setShowModal(false)}
+                                className="p-2 rounded-xl border border-transparent hover:border-slate-200 hover:bg-white text-slate-400 hover:text-slate-700 transition-colors"
+                            >
                                 <X size={20} />
                             </button>
                         </div>
 
-                        <form onSubmit={handleSubmit} className="p-8 space-y-6">
-                            <div className="space-y-1.5">
+                        <div className="p-6 sm:p-8 overflow-y-auto custom-scrollbar flex-1">
+                            <form onSubmit={handleSubmit} className="space-y-6">
+                                <div className="space-y-1.5">
                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Role Name</label>
                                 <div className="relative group">
                                     <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">
@@ -222,46 +281,110 @@ const RoleManagement = () => {
                                     <Key size={14} className="text-primary" />
                                     Select Permissions
                                 </label>
-                                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                                    {availablePermissions.map(perm => {
-                                        const isSelected = formData.permissions.includes(perm);
-                                        return (
-                                            <button
-                                                key={perm}
-                                                type="button"
-                                                onClick={() => handleTogglePermission(perm)}
-                                                className={`p-3 rounded-2xl border-2 text-left transition-all ${isSelected
-                                                    ? 'border-primary bg-primary/5 text-primary'
-                                                    : 'border-slate-50 bg-slate-50 text-slate-500 hover:border-slate-200'
-                                                    }`}
-                                            >
-                                                <p className={`text-[10px] font-black uppercase tracking-tight ${isSelected ? 'text-primary' : 'text-slate-600'}`}>
-                                                    {perm.replace('_', ' ')}
+                                <div className="space-y-4">
+                                    {permissionScopes.map((scope) => (
+                                        <div key={scope.key} className="bg-slate-50 rounded-2xl border border-slate-100 p-4">
+                                            <div className="flex items-center justify-between mb-3">
+                                                <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">
+                                                    {scope.label}
                                                 </p>
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            </div>
+                                                <span className="text-[10px] font-bold text-slate-400">
+                                                    {scope.key}.*
+                                                </span>
+                                            </div>
+                                            <div className="flex flex-wrap gap-2">
+                                                {scope.actions.map((action) => {
+                                                    const perm = `${scope.key}.${action}`;
+                                                    const isSelected = formData.permissions.includes(perm);
+                                                    return (
+                                                        <button
+                                                            key={perm}
+                                                            type="button"
+                                                            onClick={() => handleTogglePermission(perm)}
+                                                            className={`px-3 py-2 rounded-xl border text-[11px] font-bold transition-all ${isSelected
+                                                                ? 'border-primary bg-primary/5 text-primary'
+                                                                : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                                                                }`}
+                                                        >
+                                                            {action}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    ))}
 
-                            <button
-                                type="submit"
-                                disabled={isSubmitting}
-                                className="w-full mt-4 py-4 bg-primary text-white rounded-[20px] font-black text-sm uppercase tracking-widest shadow-xl shadow-primary/20 hover:bg-primary-hover hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:translate-y-0"
-                            >
-                                {isSubmitting ? (
-                                    <>
-                                        <Loader2 size={18} className="animate-spin" />
-                                        Processing...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Shield size={18} />
-                                        {editingRole ? 'Update Role' : 'Save Role & Permissions'}
-                                    </>
-                                )}
-                            </button>
-                        </form>
+                                    {/* Unknown/custom permissions already on the role */}
+                                    {formData.permissions.filter((p) => !knownPermissions.has(p)).length > 0 && (
+                                        <div className="bg-white rounded-2xl border border-slate-200 p-4">
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">
+                                                Custom / Legacy permissions
+                                            </p>
+                                            <div className="flex flex-wrap gap-2">
+                                                {formData.permissions
+                                                    .filter((p) => !knownPermissions.has(p))
+                                                    .map((perm) => (
+                                                        <button
+                                                            key={perm}
+                                                            type="button"
+                                                            onClick={() => handleTogglePermission(perm)}
+                                                            className="px-3 py-1.5 rounded-full bg-slate-50 border border-slate-200 text-[11px] font-bold text-slate-600 hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-colors"
+                                                            title="Click to remove"
+                                                        >
+                                                            {perm}
+                                                        </button>
+                                                    ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Add custom permission */}
+                                    <div className="bg-white rounded-2xl border border-slate-200 p-4">
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">
+                                            Add custom permission
+                                        </p>
+                                        <div className="flex flex-col sm:flex-row gap-3">
+                                            <input
+                                                type="text"
+                                                value={customPermission}
+                                                onChange={(e) => setCustomPermission(e.target.value)}
+                                                placeholder="e.g. sales.view"
+                                                className="flex-1 px-4 py-3 rounded-2xl bg-slate-50 border-2 border-slate-100 outline-none focus:bg-white focus:border-primary/20 transition-all text-sm font-medium"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={handleAddCustomPermission}
+                                                className="px-5 py-3 rounded-2xl bg-slate-900 text-white text-[11px] font-black uppercase tracking-widest hover:bg-slate-800 transition-colors"
+                                            >
+                                                Add
+                                            </button>
+                                        </div>
+                                        <p className="mt-2 text-[11px] text-slate-400">
+                                            Tip: Use dot-notation like <span className="font-semibold text-slate-600">sales.approve</span>.
+                                        </p>
+                                    </div>
+                                </div>
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={isSubmitting}
+                                    className="w-full mt-4 py-4 bg-primary text-white rounded-[20px] font-black text-sm uppercase tracking-widest shadow-xl shadow-primary/20 hover:bg-primary-hover hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:translate-y-0"
+                                >
+                                    {isSubmitting ? (
+                                        <>
+                                            <Loader2 size={18} className="animate-spin" />
+                                            Processing...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Shield size={18} />
+                                            {editingRole ? 'Update Role' : 'Save Role & Permissions'}
+                                        </>
+                                    )}
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             )}

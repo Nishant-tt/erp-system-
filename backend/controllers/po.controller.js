@@ -1,6 +1,8 @@
-const PO = require("../models/PO");
+﻿const PO = require("../models/PO");
 const PR = require("../models/PR");
 const ProcurementQuotation = require("../models/ProcurementQuotation");
+const { getRequiredRolesForPOAmount, userCanApprove } = require("../utils/procurementApprovals");
+const { buildPdfBuffer, buildDocxBuffer } = require("../utils/exportDocs");
 
 const calcLine = ({ quantity, unitCost, gstRate }) => {
     const qty = Number(quantity) || 0;
@@ -13,31 +15,71 @@ const calcLine = ({ quantity, unitCost, gstRate }) => {
     return { taxableValue, gstAmount, lineTotal };
 };
 
+const computeDocAmount = (body) => {
+    const direct = Number(body?.grandTotal) || Number(body?.totalAmount) || 0;
+    if (direct > 0) return direct;
+
+    const items = Array.isArray(body?.items) ? body.items : [];
+    const sum = items.reduce((acc, it) => {
+        const lineTotal = Number(it?.lineTotal);
+        if (Number.isFinite(lineTotal) && lineTotal > 0) return acc + lineTotal;
+
+        const taxable = Number(it?.taxableValue) || Number(it?.totalCost) || 0;
+        const gst = Number(it?.gstAmount) || 0;
+        return acc + taxable + gst;
+    }, 0);
+    return Number(sum) || 0;
+};
+
 exports.createPO = async (req, res) => {
     try {
+        let pr = null;
         if (req.body?.prReference) {
-            const pr = await PR.findById(req.body.prReference);
+            pr = await PR.findById(req.body.prReference);
             if (!pr) return res.status(400).json({ message: "Invalid PR reference" });
             if (pr.status !== "APPROVED") {
                 return res.status(400).json({ message: "Only APPROVED PRs can be converted into a PO" });
             }
         }
 
+        const amount = computeDocAmount(req.body);
+        const requiredApprovalRoles = getRequiredRolesForPOAmount(amount);
+
+        const now = new Date();
         const poData = {
             ...req.body,
-            createdBy: req.user.id
+            status: "DRAFT",
+            approvalStatus: "PENDING_APPROVAL",
+            requiredApprovalRoles,
+            submittedBy: req.user.id,
+            submittedAt: now,
+            createdBy: req.user.id,
         };
+
+        // Auto-fill cost center / delivery date from PR (if present)
+        if (pr) {
+            if (!poData.costCenter && pr.costCenter) poData.costCenter = pr.costCenter;
+            if (!poData.expectedDeliveryDate && pr.requiredDate) poData.expectedDeliveryDate = pr.requiredDate;
+        }
+
+        // Optional admin shortcut
+        if (req.body?.autoApprove === true && req.user.role === "Admin") {
+            poData.approvalStatus = "APPROVED";
+            poData.approvedBy = req.user.id;
+            poData.approvedAt = now;
+            poData.issuedBy = req.user.id;
+            poData.issuedAt = now;
+            poData.status = "OPEN";
+        }
 
         const po = await PO.create(poData);
 
-        // If this PO was created from a PR, we might want to link/update the PR status
-        // Decisions: Does an 'APPROVED' PR status change when a PO is created? 
-        // Let's assume for now we keep PR as is but reference it.
-
         const populatedPO = await PO.findById(po._id)
-            .populate("supplier", "name contact")
+            .populate("supplier", "name contact taxInfo")
             .populate("items.item")
-            .populate("createdBy", "name");
+            .populate("createdBy", "name")
+            .populate("submittedBy", "name")
+            .populate("approvedBy", "name");
 
         res.status(201).json(populatedPO);
     } catch (error) {
@@ -83,13 +125,20 @@ exports.createPOFromQuotation = async (req, res) => {
             };
         });
 
+        const now = new Date();
+        const requiredApprovalRoles = getRequiredRolesForPOAmount(quotation.grandTotal);
+
         const po = await PO.create({
             prReference: quotation.prReference?._id || quotation.prReference,
             quotationReference: quotation._id,
             supplier: supplierId,
             items,
             totalAmount: quotation.grandTotal,
-            status: "OPEN",
+            status: "DRAFT",
+            approvalStatus: "PENDING_APPROVAL",
+            requiredApprovalRoles,
+            submittedBy: req.user.id,
+            submittedAt: now,
             createdBy: req.user.id,
         });
 
@@ -97,6 +146,8 @@ exports.createPOFromQuotation = async (req, res) => {
             .populate("supplier", "name contact taxInfo")
             .populate("items.item")
             .populate("createdBy", "name")
+            .populate("submittedBy", "name")
+            .populate("approvedBy", "name")
             .populate("prReference", "prNumber")
             .populate("quotationReference", "quotationNumber status");
 
@@ -106,12 +157,101 @@ exports.createPOFromQuotation = async (req, res) => {
     }
 };
 
+exports.submitPOForApproval = async (req, res) => {
+    try {
+        const po = await PO.findById(req.params.id);
+        if (!po) return res.status(404).json({ message: "Purchase Order not found" });
+
+        if (po.approvalStatus === "APPROVED") {
+            return res.status(400).json({ message: "PO is already approved" });
+        }
+        if (po.status !== "DRAFT") {
+            return res.status(400).json({ message: "Only DRAFT POs can be submitted for approval" });
+        }
+
+        const amount = Number(po.grandTotal || po.totalAmount || 0);
+        po.requiredApprovalRoles = getRequiredRolesForPOAmount(amount);
+        po.approvalStatus = "PENDING_APPROVAL";
+        po.submittedBy = req.user.id;
+        po.submittedAt = new Date();
+        await po.save();
+
+        res.json(po);
+    } catch (error) {
+        res.status(400).json({ message: "Error submitting PO for approval", error: error.message });
+    }
+};
+
+exports.approvePO = async (req, res) => {
+    try {
+        const po = await PO.findById(req.params.id);
+        if (!po) return res.status(404).json({ message: "Purchase Order not found" });
+
+        if (po.approvalStatus !== "PENDING_APPROVAL") {
+            return res.status(400).json({ message: "PO is not pending approval" });
+        }
+
+        if (!userCanApprove(po.requiredApprovalRoles, req.user.role)) {
+            return res.status(403).json({
+                message: `Access denied. Required role(s): ${(po.requiredApprovalRoles || []).join(", ") || "(not set)"}`
+            });
+        }
+
+        const now = new Date();
+        po.approvalStatus = "APPROVED";
+        po.approvedBy = req.user.id;
+        po.approvedAt = now;
+        po.approvalComments = req.body?.comments || "";
+
+        // When approved, it becomes an issued PO (legal commitment)
+        if (po.status === "DRAFT") {
+            po.status = "OPEN";
+            po.issuedBy = req.user.id;
+            po.issuedAt = now;
+        }
+
+        await po.save();
+        res.json(po);
+    } catch (error) {
+        res.status(400).json({ message: "Error approving PO", error: error.message });
+    }
+};
+
+exports.rejectPO = async (req, res) => {
+    try {
+        const po = await PO.findById(req.params.id);
+        if (!po) return res.status(404).json({ message: "Purchase Order not found" });
+
+        if (po.approvalStatus !== "PENDING_APPROVAL") {
+            return res.status(400).json({ message: "PO is not pending approval" });
+        }
+
+        if (!userCanApprove(po.requiredApprovalRoles, req.user.role)) {
+            return res.status(403).json({
+                message: `Access denied. Required role(s): ${(po.requiredApprovalRoles || []).join(", ") || "(not set)"}`
+            });
+        }
+
+        po.approvalStatus = "REJECTED";
+        po.rejectedBy = req.user.id;
+        po.rejectedAt = new Date();
+        po.rejectionReason = req.body?.reason || req.body?.comments || "";
+        await po.save();
+
+        res.json(po);
+    } catch (error) {
+        res.status(400).json({ message: "Error rejecting PO", error: error.message });
+    }
+};
+
 exports.getPOs = async (req, res) => {
     try {
         const pos = await PO.find()
-            .populate("supplier", "name")
+            .populate("supplier", "code name contact")
             .populate("items.item")
             .populate("createdBy", "name")
+            .populate("submittedBy", "name")
+            .populate("approvedBy", "name")
             .sort({ createdAt: -1 });
         res.json(pos);
     } catch (error) {
@@ -125,7 +265,12 @@ exports.getPOById = async (req, res) => {
             .populate("supplier")
             .populate("items.item")
             .populate("prReference")
-            .populate("createdBy", "name");
+            .populate("quotationReference")
+            .populate("createdBy", "name")
+            .populate("submittedBy", "name")
+            .populate("approvedBy", "name")
+            .populate("rejectedBy", "name")
+            .populate("issuedBy", "name");
 
         if (!po) return res.status(404).json({ message: "Purchase Order not found" });
         res.json(po);
@@ -137,10 +282,87 @@ exports.getPOById = async (req, res) => {
 exports.updatePOStatus = async (req, res) => {
     try {
         const { status } = req.body;
-        const po = await PO.findByIdAndUpdate(req.params.id, { status }, { new: true });
+        const po = await PO.findById(req.params.id);
         if (!po) return res.status(404).json({ message: "Purchase Order not found" });
+
+        // Guard: do not allow operational status changes before PO approval.
+        const needsApproval = po.approvalStatus && po.approvalStatus !== "APPROVED";
+        const changingToOperational = ["OPEN", "PARTIALLY_RECEIVED", "RECEIVED", "CLOSED"].includes(String(status || ""));
+        if (needsApproval && changingToOperational) {
+            return res.status(400).json({ message: "PO must be APPROVED before it can be opened/received/closed" });
+        }
+
+        po.status = status;
+        await po.save();
         res.json(po);
     } catch (error) {
         res.status(400).json({ message: "Error updating PO status", error: error.message });
+    }
+};
+
+
+exports.exportPO = async (req, res) => {
+    try {
+        const format = String(req.params.format || "pdf").toLowerCase();
+        if (!["pdf", "docx"].includes(format)) {
+            return res.status(400).json({ message: "Invalid export format. Use pdf or docx." });
+        }
+
+        const po = await PO.findById(req.params.id)
+            .populate("supplier", "code name contact taxInfo.gstin")
+            .populate("items.item")
+            .populate("createdBy", "name")
+            .populate("approvedBy", "name")
+            .populate("prReference", "prNumber")
+            .populate("quotationReference", "quotationNumber");
+
+        if (!po) return res.status(404).json({ message: "Purchase Order not found" });
+
+        const title = `Purchase Order ${po.poNumber || ""}`.trim();
+        const meta = [
+            ["PO Number", po.poNumber],
+            ["PO Date", po.orderDate ? new Date(po.orderDate).toLocaleDateString("en-IN") : ""],
+            ["Vendor Name", po.supplier?.name || ""],
+            ["Vendor Code", po.supplier?.code || ""],
+            ["Delivery Date", po.expectedDeliveryDate ? new Date(po.expectedDeliveryDate).toLocaleDateString("en-IN") : ""],
+            ["Delivery Location", po.deliveryLocation || ""],
+            ["Payment Terms", po.paymentTerms || po.terms || ""],
+            ["Shipping Method", po.shippingMethod || ""],
+            ["Cost Center", po.costCenter || ""],
+            ["Created By", po.createdBy?.name || ""],
+            ["Approved By", po.approvedBy?.name || ""],
+            ["PO Status", po.approvalStatus && po.approvalStatus !== "APPROVED" ? po.approvalStatus : po.status],
+        ];
+
+        const columns = ["Item Code", "Item Description", "Qty", "UOM", "Unit Price", "Discount", "GST", "Line Total"];
+        const rows = (po.items || []).map((it) => ([
+            it.item?.itemCode || "",
+            it.description || it.item?.itemName || "",
+            it.quantity ?? "",
+            it.unit || it.item?.uom || "",
+            it.unitCost ?? "",
+            it.discount ?? 0,
+            `${Number(it.gstAmount || 0)} (${Number(it.gstRate || 0)}%)`,
+            it.lineTotal ?? "",
+        ]));
+
+        let buffer;
+        let contentType;
+        let filename;
+        if (format === "pdf") {
+            buffer = await buildPdfBuffer({ title, meta, columns, rows });
+            contentType = "application/pdf";
+            filename = `${po.poNumber || "PO"}.pdf`;
+        } else {
+            buffer = await buildDocxBuffer({ title, meta, columns, rows });
+            contentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+            filename = `${po.poNumber || "PO"}.docx`;
+        }
+
+        res.setHeader("Content-Type", contentType);
+        res.setHeader("Content-Disposition", `attachment; filename=\"${filename}\"`);
+        res.send(buffer);
+    } catch (error) {
+        res.status(400).json({ message: "Error exporting PO", error: error.message });
     }
 };

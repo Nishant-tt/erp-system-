@@ -36,15 +36,15 @@ const DashboardPage = () => {
     ];
 
     return (
-        <>
-            <div className="mb-10 flex justify-between items-end">
-                <div>
-                    <h1 className="text-3xl font-black text-slate-900 tracking-tight mb-2">
+        <div className="min-w-0">
+            <div className="mb-6 sm:mb-10 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+                <div className="min-w-0">
+                    <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mb-1 sm:mb-2 truncate">
                         Procurement Command
                     </h1>
-                    <p className="text-slate-500 font-medium italic text-sm">Real-time oversight of requisition lifecycles and vendor performance.</p>
+                    <p className="text-slate-500 font-medium italic text-xs sm:text-sm">Real-time oversight of requisition lifecycles and vendor performance.</p>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex gap-3 shrink-0">
                     <div className="flex -space-x-2">
                         {[1, 2, 3].map(i => (
                             <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-slate-200 flex items-center justify-center text-[10px] font-bold">U{i}</div>
@@ -53,16 +53,16 @@ const DashboardPage = () => {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
                 {stats.map((stat, index) => (
                     <StatCard key={index} {...stat} />
                 ))}
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
                 {/* Left Column: Quick Actions & Chart */}
-                <div className="lg:col-span-2 space-y-8">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="lg:col-span-2 space-y-6 sm:space-y-8">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
                         <button
                             onClick={() => navigate('/prs/create')}
                             className="bg-primary p-6 rounded-[32px] text-white text-left group hover:shadow-xl hover:shadow-primary/20 transition-all"
@@ -151,7 +151,7 @@ const DashboardPage = () => {
                     </button>
                 </div>
             </div>
-        </>
+        </div>
     );
 };
 

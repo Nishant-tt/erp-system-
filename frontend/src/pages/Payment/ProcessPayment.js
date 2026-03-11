@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { getInvoicesAPI } from '../../api/purchaseInvoice';
 import { createPaymentAPI } from '../../api/vendorPayment';
@@ -36,10 +36,16 @@ const ProcessPayment = () => {
     const [remarks, setRemarks] = useState('');
 
     useEffect(() => {
+    const allowedRoles = ["Admin", "Finance Head", "Director", "GM"];
+    const role = localStorage.getItem("role");
+    if (!allowedRoles.includes(role)) {
+        navigate("/dashboard");
+        return;
+    }
     const fetchInvoices = async () => {
             try {
                 const data = await getInvoicesAPI();
-                setUnpaidInvoices(data.filter(inv => ['UNPAID', 'PARTIALLY_PAID'].includes(inv.status)));
+                setUnpaidInvoices(data.filter(inv => ['UNPAID', 'PARTIALLY_PAID'].includes(inv.status) && (!inv.approvalStatus || inv.approvalStatus === 'APPROVED')));
             } catch (err) {
                 console.error('Failed to load invoices:', err);
                 setMessage({ type: 'error', text: 'Failed to load pending bills.' });
@@ -68,7 +74,7 @@ const ProcessPayment = () => {
             return;
         }
         if (amount <= 0 || amount > selectedInvoice.balanceAmount) {
-            setMessage({ type: 'error', text: `Invalid amount. Max allowed: ₹${selectedInvoice.balanceAmount}` });
+            setMessage({ type: 'error', text: `Invalid amount. Max allowed: â‚¹${selectedInvoice.balanceAmount}` });
             return;
         }
 
@@ -104,7 +110,7 @@ const ProcessPayment = () => {
     }
 
     return (
-        <div className="max-w-6xl mx-auto space-y-8 animate-in slide-in-from-bottom-8 duration-500 pb-20 text-left">
+        <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8 px-2 sm:px-0 min-w-0 animate-in slide-in-from-bottom-8 duration-500 pb-20 text-left">
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
@@ -151,7 +157,7 @@ const ProcessPayment = () => {
                                             <p className="text-xs font-bold text-slate-500 mt-1">{inv.supplier?.name}</p>
                                             <div className="flex gap-2 mt-4 items-center">
                                                 <span className="text-[9px] font-black bg-white px-2 py-0.5 rounded-md border border-slate-100 text-red-500 uppercase tracking-widest">
-                                                    DUE: ₹{inv.balanceAmount.toLocaleString()}
+                                                    DUE: â‚¹{inv.balanceAmount.toLocaleString()}
                                                 </span>
                                             </div>
                                         </div>
@@ -261,7 +267,7 @@ const ProcessPayment = () => {
                                     </div>
                                 </div>
                                 {selectedInvoice && (
-                                    <p className="text-[9px] font-bold text-slate-500 text-right mt-2 uppercase">Remaining Balance: ₹{(selectedInvoice.balanceAmount - amount).toLocaleString()}</p>
+                                    <p className="text-[9px] font-bold text-slate-500 text-right mt-2 uppercase">Remaining Balance: â‚¹{(selectedInvoice.balanceAmount - amount).toLocaleString()}</p>
                                 )}
                             </div>
                         </div>
@@ -293,3 +299,4 @@ const ProcessPayment = () => {
 };
 
 export default ProcessPayment;
+

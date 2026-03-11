@@ -1,4 +1,4 @@
-const VendorPayment = require("../models/VendorPayment");
+﻿const VendorPayment = require("../models/VendorPayment");
 const PurchaseInvoice = require("../models/PurchaseInvoice");
 
 exports.createPayment = async (req, res) => {
@@ -8,19 +8,40 @@ exports.createPayment = async (req, res) => {
             processedBy: req.user.id
         };
 
+        const invoice = await PurchaseInvoice.findById(paymentData.invoiceReference);
+        if (!invoice) {
+            return res.status(400).json({ message: "Invalid invoice reference" });
+        }
+
+        // Enforce finance approval before payment (best practice)
+        if (invoice.approvalStatus && invoice.approvalStatus !== "APPROVED") {
+            return res.status(400).json({ message: "Invoice must be APPROVED before payment can be processed" });
+        }
+
+        if (["CANCELLED"].includes(invoice.status)) {
+            return res.status(400).json({ message: "Cannot pay a cancelled invoice" });
+        }
+
+        const amount = Number(paymentData.amount) || 0;
+        if (amount <= 0) {
+            return res.status(400).json({ message: "Payment amount must be greater than 0" });
+        }
+
+        const balance = Number(invoice.balanceAmount) || (Number(invoice.grandTotal) - Number(invoice.amountPaid || 0));
+        if (amount > balance + 1e-9) {
+            return res.status(400).json({ message: `Payment amount exceeds invoice balance (balance: ${balance})` });
+        }
+
         const payment = await VendorPayment.create(paymentData);
 
         // Update Invoice status and amount paid
-        const invoice = await PurchaseInvoice.findById(payment.invoiceReference);
-        if (invoice) {
-            invoice.amountPaid += payment.amount;
-            if (invoice.amountPaid >= invoice.grandTotal) {
-                invoice.status = 'PAID';
-            } else {
-                invoice.status = 'PARTIALLY_PAID';
-            }
-            await invoice.save();
+        invoice.amountPaid += amount;
+        if (invoice.amountPaid >= invoice.grandTotal) {
+            invoice.status = 'PAID';
+        } else {
+            invoice.status = 'PARTIALLY_PAID';
         }
+        await invoice.save();
 
         // --- AUTOMATED FINANCE POSTING ---
         try {
@@ -29,8 +50,8 @@ exports.createPayment = async (req, res) => {
                 reference: payment.transactionId || `VPAY-${payment._id}`,
                 description: `Vendor Payment made for Invoice ${invoice ? invoice.vendorInvoiceNumber : ''}`,
                 items: [
-                    { accountCode: "2000", debit: payment.amount },  // Accounts Payable
-                    { accountCode: "1000", credit: payment.amount }  // Bank/Cash
+                    { accountCode: "2000", debit: amount },  // Accounts Payable
+                    { accountCode: "1000", credit: amount }  // Bank/Cash
                 ]
             });
         } catch (finError) {

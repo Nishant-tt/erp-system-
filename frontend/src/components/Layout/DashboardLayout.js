@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { ChevronRight } from 'lucide-react';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import Footer from './Footer';
@@ -55,15 +56,38 @@ const DashboardLayout = () => {
     };
 
     return (
-        <div className="flex min-h-screen bg-slate-50 font-sans">
+        <div className="flex min-h-screen bg-slate-50 font-sans min-w-0">
+            {/* Mobile overlay backdrop when sidebar is open */}
+            <div
+                role="button"
+                tabIndex={0}
+                aria-label="Close menu"
+                onClick={() => isSidebarOpen && toggleSidebar()}
+                onKeyDown={(e) => e.key === 'Enter' && isSidebarOpen && toggleSidebar()}
+                className={`fixed inset-0 bg-black/50 z-40 transition-opacity duration-300 md:hidden ${
+                    isSidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+                }`}
+            />
             <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
+            {/* Persistent "Open sidebar" button when closed - mobile: always show; desktop: sidebar strip has its own visible toggle */}
+            {!isSidebarOpen && (
+                <button
+                    type="button"
+                    onClick={toggleSidebar}
+                    aria-label="Open menu"
+                    className="fixed left-0 top-1/2 -translate-y-1/2 z-50 w-10 h-14 flex items-center justify-center bg-blue-600 hover:bg-blue-500 text-white rounded-r-xl shadow-lg border-r-0 border border-slate-200/80 transition-all hover:scale-105 active:scale-95 md:hidden"
+                >
+                    <ChevronRight size={22} />
+                </button>
+            )}
+
             <div
-                className={`flex-1 flex flex-col min-w-0 transition-all duration-300 pl-0 ${isSidebarOpen ? 'md:pl-64' : 'md:pl-16'}`}
+                className={`flex-1 flex flex-col min-w-0 w-full transition-[padding] duration-300 pl-0 ${isSidebarOpen ? 'md:pl-64' : 'md:pl-16'}`}
             >
                 <Header toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />
 
-                <main className="flex-1 p-4 sm:p-6 lg:p-8 pb-24">
+                <main className="flex-1 px-3 sm:px-4 md:px-6 lg:px-8 pt-16 pb-16 sm:pt-20 sm:pb-20 min-w-0 overflow-x-hidden">
                     <Outlet />
                 </main>
 

@@ -102,7 +102,7 @@ const FinancialYearManagement = () => {
     }
 
     return (
-        <div className="max-w-6xl mx-auto space-y-6">
+        <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6 px-0 sm:px-2 min-w-0">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h1 className="text-2xl font-black text-slate-900 tracking-tight">Financial Years</h1>

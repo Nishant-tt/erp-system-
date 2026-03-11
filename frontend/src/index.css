@@ -4,14 +4,28 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 
+/* Prevent horizontal overflow on all screens */
+html {
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   font-family: 'Outfit', sans-serif;
   @apply bg-slate-50 text-slate-900 antialiased;
+  overflow-x: hidden;
+  min-width: 0;
+}
+
+#root {
+  min-width: 0;
+  overflow-x: hidden;
 }
 
 /* Custom Sleek Scrollbar */
 .custom-scrollbar::-webkit-scrollbar {
   width: 4px;
+  height: 4px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
@@ -26,4 +40,21 @@ body {
 .custom-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: rgba(71, 85, 105, 0.2) transparent;
+}
+
+/* Responsive table container: horizontal scroll on small screens */
+.table-responsive {
+  @apply overflow-x-auto w-full;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-responsive table {
+  @apply min-w-[600px] w-full;
+}
+
+/* Responsive modal: full-screen on small devices */
+@media (max-width: 640px) {
+  .modal-responsive .modal-content-inner {
+    @apply max-h-[85vh] rounded-2xl;
+  }
 }

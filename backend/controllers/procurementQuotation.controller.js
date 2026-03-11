@@ -1,6 +1,7 @@
 const ProcurementQuotation = require("../models/ProcurementQuotation");
 const PR = require("../models/PR");
 const ItemMaster = require("../models/ItemMaster");
+const { buildPdfBuffer, buildDocxBuffer } = require("../utils/exportDocs");
 
 const calcLine = ({ quantity, unitPrice, gstRate }) => {
   const qty = Number(quantity) || 0;
@@ -17,7 +18,7 @@ const calcLine = ({ quantity, unitPrice, gstRate }) => {
 exports.getQuotations = async (req, res) => {
   const q = await ProcurementQuotation.find()
     .populate("prReference", "prNumber status")
-    .populate("suppliers", "name taxInfo.gstin")
+    .populate("suppliers", "code name contact taxInfo.gstin")
     .populate("createdBy", "name")
     .populate("approver", "name")
     .sort({ createdAt: -1 });
@@ -84,11 +85,26 @@ exports.createFromPR = async (req, res) => {
   );
 
   const status = req.body?.status || "DRAFT";
+  const rfqDate = req.body?.rfqDate ? new Date(req.body.rfqDate) : new Date();
+  const requestedDeliveryDate = req.body?.requestedDeliveryDate
+    ? new Date(req.body.requestedDeliveryDate)
+    : (pr.requiredDate ? new Date(pr.requiredDate) : undefined);
+  const quotationDueDate = req.body?.quotationDueDate ? new Date(req.body.quotationDueDate) : undefined;
+  const termsConditions = req.body?.termsConditions || "";
+  const currency = req.body?.currency || "INR";
+  const remarks = req.body?.remarks || "";
+
   const quotation = await ProcurementQuotation.create({
     prReference: pr._id,
     suppliers,
     items,
     status,
+    rfqDate,
+    requestedDeliveryDate,
+    quotationDueDate,
+    termsConditions,
+    currency,
+    remarks,
     createdBy: req.user.id,
   });
 
@@ -152,3 +168,68 @@ exports.markSentToSuppliers = async (req, res) => {
   res.json(q);
 };
 
+exports.exportRFQ = async (req, res) => {
+  try {
+    const format = String(req.params.format || "pdf").toLowerCase();
+    if (!["pdf", "docx"].includes(format)) {
+      return res.status(400).json({ message: "Invalid export format. Use pdf or docx." });
+    }
+
+    const q = await ProcurementQuotation.findById(req.params.id)
+      .populate({
+        path: "prReference",
+        populate: [
+          { path: "requestedBy", select: "name email" },
+          { path: "department", select: "name code" },
+        ],
+      })
+      .populate("items.item")
+      .populate("suppliers", "code name contact taxInfo.gstin")
+      .populate("createdBy", "name")
+      .populate("approver", "name");
+
+    if (!q) return res.status(404).json({ message: "Quotation not found" });
+
+    const title = `RFQ ${q.quotationNumber || ""}`.trim();
+    const meta = [
+      ["RFQ Number", q.quotationNumber],
+      ["RFQ Date", q.rfqDate ? new Date(q.rfqDate).toLocaleDateString("en-IN") : ""],
+      ["PR Reference", q.prReference?.prNumber || ""],
+      ["Requested Delivery Date", q.requestedDeliveryDate ? new Date(q.requestedDeliveryDate).toLocaleDateString("en-IN") : ""],
+      ["Quotation Due Date", q.quotationDueDate ? new Date(q.quotationDueDate).toLocaleDateString("en-IN") : ""],
+      ["Currency", q.currency || "INR"],
+      ["RFQ Status", q.status || ""],
+      ["Suppliers", (q.suppliers || []).map((s) => s.name).join(", ")],
+    ];
+
+    const columns = ["Item Code", "Item Description", "Qty", "UOM", "Unit Price", "GST%", "Line Total"];
+    const rows = (q.items || []).map((it) => ([
+      it.item?.itemCode || "",
+      it.description || it.item?.itemName || "",
+      it.quantity ?? "",
+      it.unit || it.item?.uom || "",
+      it.unitPrice ?? "",
+      it.gstRate ?? "",
+      it.lineTotal ?? "",
+    ]));
+
+    let buffer;
+    let contentType;
+    let filename;
+    if (format === "pdf") {
+      buffer = await buildPdfBuffer({ title, meta, columns, rows });
+      contentType = "application/pdf";
+      filename = `${q.quotationNumber || "RFQ"}.pdf`;
+    } else {
+      buffer = await buildDocxBuffer({ title, meta, columns, rows });
+      contentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+      filename = `${q.quotationNumber || "RFQ"}.docx`;
+    }
+
+    res.setHeader("Content-Type", contentType);
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    res.send(buffer);
+  } catch (error) {
+    res.status(400).json({ message: "Error exporting RFQ", error: error.message });
+  }
+};

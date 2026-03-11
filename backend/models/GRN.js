@@ -4,6 +4,7 @@ const grnItemSchema = new mongoose.Schema({
     item: { type: mongoose.Schema.Types.ObjectId, ref: "ItemMaster", required: true },
     orderedQuantity: { type: Number, required: true },
     receivedQuantity: { type: Number, required: true },
+    acceptedQuantity: { type: Number, default: 0 }, // auto: received - rejected (clamped)
     rejectedQuantity: { type: Number, default: 0 },
     unit: { type: String },
     unitCost: { type: Number, required: true }
@@ -20,6 +21,8 @@ const grnSchema = new mongoose.Schema(
         vehicleNumber: { type: String },
         billNumber: { type: String },
         billDate: { type: Date },
+        warehouseLocation: { type: String, default: "" },
+        inspectionStatus: { type: String, enum: ["PENDING", "PASSED", "FAILED"], default: "PENDING" },
         remarks: { type: String },
         verificationStatus: {
             type: String,

@@ -19,6 +19,7 @@ import PRDetails from './pages/PR/PRDetails';
 import ApprovalQueue from './pages/PR/ApprovalQueue';
 import Performance from './pages/Reports/Performance';
 import DashboardLayout from './components/Layout/DashboardLayout';
+import PrintLayout from './components/Layout/PrintLayout';
 
 // Procurement Flow
 import ProcurementQuotationManagement from './pages/ProcurementQuotation/ProcurementQuotationManagement';
@@ -28,11 +29,19 @@ import ProcurementQuotationApprovalQueue from './pages/ProcurementQuotation/Proc
 import PurchaseOrderManagement from './pages/PurchaseOrder/PurchaseOrderManagement';
 import CreatePurchaseOrder from './pages/PurchaseOrder/CreatePurchaseOrder';
 import PurchaseOrderDetails from './pages/PurchaseOrder/PurchaseOrderDetails';
+import PurchaseOrderPrint from './pages/PurchaseOrder/PurchaseOrderPrint';
 import PurchaseOrderApprovalQueue from './pages/PurchaseOrder/PurchaseOrderApprovalQueue';
 import GRNManagement from './pages/GRN/GRNManagement';
 import CreateGRN from './pages/GRN/CreateGRN';
 import GRNDetails from './pages/GRN/GRNDetails';
+import GRNPrint from './pages/GRN/GRNPrint';
 import GRNApprovalQueue from './pages/GRN/GRNApprovalQueue';
+
+// Accounts Payable
+import InvoiceManagement from './pages/Invoice/InvoiceManagement';
+import CreateInvoice from './pages/Invoice/CreateInvoice';
+import PaymentManagement from './pages/Payment/PaymentManagement';
+import ProcessPayment from './pages/Payment/ProcessPayment';
 
 // Sales & CRM Flow
 import LeadManagement from './pages/CRM/LeadManagement';
@@ -55,6 +64,7 @@ import SalesAnalytics from './pages/Reports/SalesAnalytics';
 import ChartOfAccounts from './pages/Finance/ChartOfAccounts';
 import JournalEntries from './pages/Finance/JournalEntries';
 import TrialBalance from './pages/Finance/TrialBalance';
+import ModuleLanding from './pages/Modules/ModuleLanding';
 
 function App() {
   return (
@@ -63,14 +73,20 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/forgot-password" element={<ForgetPasswordPage />} />
 
-        {/* Dashboard Routes with Layout */}
+        {/* Print Routes (No Sidebar/Header/Footer) */}
+        <Route element={<PrintLayout />}>
+          <Route path="/purchase-orders/:id/print" element={<PurchaseOrderPrint />} />
+          <Route path="/grns/:id/print" element={<GRNPrint />} />
+        </Route>
+
+      {/* Dashboard Routes with Layout */}
         <Route element={<DashboardLayout />}>
           <Route path="/dashboard" element={<DashboardPage />} />
 
           {/* Profile Suite */}
           <Route path="/profile" element={<ProfilePage />} />
 
-          {/* Admin Suite */}
+        {/* Admin Suite */}
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/users" element={<UserManagement />} />
           <Route path="/admin/roles" element={<RoleManagement />} />
@@ -80,7 +96,9 @@ function App() {
           <Route path="/admin/items" element={<ItemMaster />} />
           <Route path="/admin/company" element={<CompanySettings />} />
           <Route path="/admin/financial-years" element={<FinancialYearManagement />} />
-      {/* Procurement Lifecycle */}
+
+        {/* Procurement Lifecycle */}
+          <Route path="/procurement" element={<ModuleLanding />} />
 
           {/* Requisition Flow */}
           <Route path="/prs" element={<PRManagement />} />
@@ -106,7 +124,15 @@ function App() {
           <Route path="/grns/create" element={<CreateGRN />} />
           <Route path="/grns/:id" element={<GRNDetails />} />
 
-          {/* Sales & CRM Lifecycle */}
+          {/* Accounts Payable */}
+          <Route path="/invoices" element={<InvoiceManagement />} />
+          <Route path="/invoices/create" element={<CreateInvoice />} />
+          <Route path="/payments" element={<PaymentManagement />} />
+          <Route path="/payments/process" element={<ProcessPayment />} />
+
+        {/* Sales & CRM Lifecycle */}
+          <Route path="/sales" element={<ModuleLanding />} />
+          <Route path="/crm" element={<ModuleLanding />} />
           <Route path="/leads" element={<LeadManagement />} />
           <Route path="/leads/create" element={<LeadForm />} />
           <Route path="/leads/edit/:id" element={<LeadForm />} />
@@ -129,11 +155,15 @@ function App() {
           <Route path="/customer-payments/create" element={<CustomerPaymentForm />} />
           <Route path="/customer-payments/edit/:id" element={<CustomerPaymentForm />} />
 
-          {/* Reports & Analytics */}
+        {/* Reports & Analytics */}
+          <Route path="/reports" element={<ModuleLanding />} />
+          <Route path="/reports-analytics" element={<ModuleLanding />} />
           <Route path="/performance" element={<Performance />} />
           <Route path="/sales-analytics" element={<SalesAnalytics />} />
 
-          {/* Finance Lifecycle */}
+        {/* Finance Lifecycle */}
+          <Route path="/finance" element={<ModuleLanding />} />
+          <Route path="/financial" element={<ModuleLanding />} />
           <Route path="/chart-of-accounts" element={<ChartOfAccounts />} />
           <Route path="/journal-entries" element={<JournalEntries />} />
           <Route path="/trial-balance" element={<TrialBalance />} />

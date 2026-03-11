@@ -39,6 +39,27 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         fetchModules();
     }, []);
 
+    // On mobile, close the sidebar after navigation so content isn't blocked.
+    useEffect(() => {
+        try {
+            const isMobile = window.matchMedia && window.matchMedia('(max-width: 767px)').matches;
+            if (isOpen && isMobile) toggleSidebar();
+        } catch {
+            // ignore
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [location.pathname]);
+
+    const navigateAndMaybeClose = (path) => {
+        if (path) navigate(path);
+        try {
+            const isMobile = window.matchMedia && window.matchMedia('(max-width: 767px)').matches;
+            if (isOpen && isMobile) toggleSidebar();
+        } catch {
+            // ignore
+        }
+    };
+
     const handleLogout = async () => {
         try {
             await logoutAPI();
@@ -57,7 +78,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             return;
         }
         setExpandedModule(expandedModule === moduleId ? null : moduleId);
-        if (path) navigate(path);
+        if (path) navigateAndMaybeClose(path);
     };
 
     const DynamicIcon = ({ name, size = 20, className = "" }) => {
@@ -170,7 +191,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                                             {sortedMenus.map((subItem) => (
                                                 <button
                                                     key={subItem._id}
-                                                    onClick={() => navigate(subItem.path)}
+                                                    onClick={() => navigateAndMaybeClose(subItem.path)}
                                                     className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                                                         location.pathname === subItem.path
                                                             ? 'text-blue-400 bg-blue-500/5'

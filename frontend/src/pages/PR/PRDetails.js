@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getPRByIdAPI, approvePRAPI, rejectPRAPI, submitPRAPI } from '../../api/pr';
+import { getPRByIdAPI, approvePRAPI, rejectPRAPI, submitPRAPI, exportPRAPI } from '../../api/pr';
+import { downloadAxiosBlobResponse } from '../../utils/downloadFile';
 import {
     ArrowLeft,
     Clock,
@@ -14,7 +15,9 @@ import {
     ThumbsUp,
     ThumbsDown,
     Loader2,
-    AlertCircle
+    AlertCircle,
+    FileDown,
+    FileText
 } from 'lucide-react';
 
 const PRDetails = () => {
@@ -90,6 +93,20 @@ const PRDetails = () => {
         }
     };
 
+    const handleExport = async (format) => {
+        setIsActioning(true);
+        try {
+            const res = await exportPRAPI(id, format);
+            const ext = format === "docx" ? "docx" : "pdf";
+            downloadAxiosBlobResponse(res, `${pr?.prNumber || "PR"}.${ext}`);
+        } catch (error) {
+            console.error("Error exporting PR:", error);
+            setMessage({ type: 'error', text: 'Failed to export requisition.' });
+        } finally {
+            setIsActioning(false);
+        }
+    };
+
     if (isLoading) {
         return (
             <div className="flex items-center justify-center min-h-[400px]">
@@ -108,13 +125,14 @@ const PRDetails = () => {
         );
     }
 
-    const canApprove = (userRole === 'Admin' || userRole === 'Manager') && pr.status === 'PENDING_APPROVAL';
+    const approverRoles = ['Admin', 'Manager', 'Department Head', 'Budget Owner'];
+    const canApprove = approverRoles.includes(userRole) && pr.status === 'PENDING_APPROVAL';
     const canSubmit = pr.status === 'DRAFT' && pr.requestedBy?._id === userId;
 
     return (
-        <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in duration-500">
+        <div className="max-w-5xl mx-auto space-y-6 sm:space-y-8 px-2 sm:px-0 min-w-0 animate-in fade-in duration-500">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                <div>
+                <div className="min-w-0">
                     <button
                         onClick={() => navigate('/prs')}
                         className="flex items-center gap-2 text-slate-400 hover:text-primary transition-colors font-bold text-xs uppercase tracking-widest mb-2"
@@ -135,6 +153,25 @@ const PRDetails = () => {
                             {pr.status.replace('_', ' ')}
                         </span>
                     </div>
+                </div>
+
+                <div className="flex flex-wrap gap-2 w-full md:w-auto">
+                    <button
+                        onClick={() => handleExport("pdf")}
+                        disabled={isActioning}
+                        className="flex-1 md:flex-none px-4 py-3 rounded-2xl bg-slate-900 text-white font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-slate-800 transition-all disabled:opacity-50"
+                    >
+                        <FileDown size={14} />
+                        Generate PDF
+                    </button>
+                    <button
+                        onClick={() => handleExport("docx")}
+                        disabled={isActioning}
+                        className="flex-1 md:flex-none px-4 py-3 rounded-2xl bg-white border border-slate-200 text-slate-700 font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:border-primary/20 hover:text-slate-900 transition-all disabled:opacity-50"
+                    >
+                        <FileText size={14} />
+                        Generate Word
+                    </button>
                 </div>
             </div>
 
@@ -313,7 +350,7 @@ const PRDetails = () => {
                                                 onChange={(e) => setComments(e.target.value)}
                                             />
                                         </div>
-                                        <div className="grid grid-cols-2 gap-3">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                             <button
                                                 onClick={handleApprove}
                                                 disabled={isActioning}

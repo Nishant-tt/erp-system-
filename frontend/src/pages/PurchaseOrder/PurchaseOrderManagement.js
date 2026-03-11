@@ -1,210 +1,276 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { getPOsAPI } from '../../api/po';
-import Pagination from '../../components/common/Pagination';
-import {
-    FileText,
-    Plus,
-    Search,
-    ChevronRight,
-    Clock,
-    Truck,
-    Loader2,
-    Download
-} from 'lucide-react';
+import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { getPOsAPI } from "../../api/po";
+import Pagination from "../../components/common/Pagination";
+import { Loader2, Plus, Search } from "lucide-react";
 
 const PurchaseOrderManagement = () => {
-    const navigate = useNavigate();
-    const [pos, setPOs] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [page, setPage] = useState(1);
-    const [pageSize, setPageSize] = useState(10);
+  const navigate = useNavigate();
+  const [pos, setPOs] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ALL");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
-    useEffect(() => {
-        fetchPOs();
-    }, []);
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await getPOsAPI();
+        setPOs(data || []);
+      } catch (e) {
+        console.error("Error fetching POs:", e);
+      } finally {
+        setIsLoading(false);
+      }
+    })();
+  }, []);
 
-    const fetchPOs = async () => {
-        try {
-            const data = await getPOsAPI();
-            setPOs(data);
-        } catch (error) {
-            console.error('Error fetching POs:', error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const getStatusStyle = (status) => {
-        switch (status) {
-            case 'OPEN': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
-            case 'PARTIALLY_RECEIVED': return 'bg-amber-50 text-amber-600 border-amber-100';
-            case 'RECEIVED': return 'bg-blue-50 text-blue-600 border-blue-100';
-            case 'CLOSED': return 'bg-slate-50 text-slate-600 border-slate-100';
-            case 'CANCELLED': return 'bg-red-50 text-red-600 border-red-100';
-            default: return 'bg-slate-50 text-slate-500 border-slate-100';
-        }
-    };
-
-    const filteredPOs = pos.filter(po =>
-        po.poNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        po.supplier?.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-    const totalFiltered = filteredPOs.length;
-    const startIndex = (page - 1) * pageSize;
-    const paginatedPOs = filteredPOs.slice(startIndex, startIndex + pageSize);
-
-    const downloadCsv = () => {
-        const rows = filteredPOs.map(po => ({
-            poNumber: po.poNumber,
-            supplier: po.supplier?.name || '',
-            status: po.status,
-            totalAmount: po.totalAmount,
-            createdAt: po.createdAt
-        }));
-        const headers = Object.keys(rows[0] || { poNumber: '', supplier: '', status: '', totalAmount: '', createdAt: '' });
-        const csv = [
-            headers.join(','),
-            ...rows.map(r => headers.map(h => `"${String(r[h] ?? '').replaceAll('"', '""')}"`).join(','))
-        ].join('\n');
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `POs_${new Date().toISOString().slice(0, 10)}.csv`;
-        a.click();
-        URL.revokeObjectURL(url);
-    };
-
-    if (isLoading) {
-        return (
-            <div className="flex items-center justify-center min-h-[400px]">
-                <Loader2 className="animate-spin text-primary" size={32} />
-            </div>
-        );
+  const rows = useMemo(() => {
+    const out = [];
+    for (const po of pos || []) {
+      const items = Array.isArray(po.items) && po.items.length > 0 ? po.items : [null];
+      for (const it of items) {
+        const item = it?.item || {};
+        out.push({
+          poId: po._id,
+          poNumber: po.poNumber || "",
+          poDate: po.orderDate || po.createdAt,
+          vendorName: po.supplier?.name || "",
+          vendorCode: po.supplier?.code || "",
+          itemCode: item.itemCode || "",
+          itemDescription: it?.description || item.description || item.itemName || "",
+          qty: it?.quantity ?? "",
+          uom: it?.unit || item.uom || "",
+          unitPrice: it?.unitCost ?? "",
+          totalPrice: it?.taxableValue ?? it?.totalCost ?? "",
+          discount: it?.discount ?? 0,
+          taxGst: it?.gstAmount ?? 0,
+          gstRate: it?.gstRate ?? 0,
+          deliveryDate: po.expectedDeliveryDate || "",
+          deliveryLocation: po.deliveryLocation || "",
+          paymentTerms: po.paymentTerms || po.terms || "",
+          shippingMethod: po.shippingMethod || "",
+          costCenter: po.costCenter || "",
+          createdBy: po.createdBy?.name || "",
+          approvedBy: po.approvedBy?.name || "",
+          poStatus: po.approvalStatus && po.approvalStatus !== "APPROVED" ? po.approvalStatus : po.status,
+        });
+      }
     }
+    return out;
+  }, [pos]);
 
+  const filtered = useMemo(() => {
+    const s = searchTerm.trim().toLowerCase();
+    return rows.filter((r) => {
+      const matchesStatus = statusFilter === "ALL" || r.poStatus === statusFilter;
+      const matchesSearch = (
+        !s ||
+        r.poNumber.toLowerCase().includes(s) ||
+        r.vendorName.toLowerCase().includes(s) ||
+        r.vendorCode.toLowerCase().includes(s) ||
+        r.itemCode.toLowerCase().includes(s) ||
+        r.itemDescription.toLowerCase().includes(s)
+      );
+      return matchesStatus && matchesSearch;
+    });
+  }, [rows, searchTerm, statusFilter]);
+
+  const statusOptions = useMemo(() => {
+    const set = new Set((rows || []).map((r) => r.poStatus).filter(Boolean));
+    return ["ALL", ...Array.from(set).sort()];
+  }, [rows]);
+
+  const totalFiltered = filtered.length;
+  const startIndex = (page - 1) * pageSize;
+  const paginated = filtered.slice(startIndex, startIndex + pageSize);
+
+
+  if (isLoading) {
     return (
-        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-0 sm:px-2 min-w-0 animate-in fade-in duration-500">
-            <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 sm:gap-4">
-                <div>
-                    <h1 className="text-2xl font-black text-slate-900 tracking-tight">Purchase Orders</h1>
-                    <p className="text-slate-500 text-sm font-medium">Manage and track your official procurement orders.</p>
-                </div>
-                <button
-                    onClick={() => navigate('/purchase-orders/create')}
-                    className="flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-2xl font-bold hover:bg-primary-hover transition-all shadow-lg shadow-primary/20 active:scale-95"
-                >
-                    <Plus size={18} />
-                    Create New PO
-                </button>
-                <button
-                    onClick={downloadCsv}
-                    className="flex items-center gap-2 px-6 py-3 bg-white text-slate-700 rounded-2xl font-bold border-2 border-slate-100 hover:border-slate-200 transition-all shadow-sm active:scale-95"
-                >
-                    <Download size={18} />
-                    Download
-                </button>
-            </div>
-
-            <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-                <div className="relative group w-full md:max-w-md">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" size={18} />
-                    <input
-                        type="text"
-                        placeholder="Search PO number or supplier..."
-                        className="w-full pl-12 pr-4 py-3.5 bg-white border-2 border-slate-100 rounded-2xl outline-none focus:border-primary/20 transition-all font-bold text-sm"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                </div>
-            </div>
-
-            <div className="bg-white rounded-2xl sm:rounded-[32px] shadow-sm border border-slate-200/60 overflow-hidden">
-                <div className="table-responsive overflow-x-auto custom-scrollbar">
-                    <table className="w-full text-left border-collapse min-w-[600px]">
-                        <thead>
-                            <tr className="bg-slate-50/50 border-b border-slate-100">
-                                <th className="px-4 sm:px-8 py-4 sm:py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Order Details</th>
-                                <th className="px-4 sm:px-8 py-4 sm:py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Supplier</th>
-                                <th className="px-4 sm:px-8 py-4 sm:py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Amount</th>
-                                <th className="px-4 sm:px-8 py-4 sm:py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
-                                <th className="px-4 sm:px-8 py-4 sm:py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                            {paginatedPOs.map((po) => (
-                                <tr
-                                    key={po._id}
-                                    className="group hover:bg-slate-50/50 transition-all cursor-pointer"
-                                    onClick={() => navigate(`/purchase-orders/${po._id}`)}
-                                >
-                                    <td className="px-4 sm:px-8 py-4 sm:py-6">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 bg-primary/5 rounded-2xl flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                                                <FileText size={20} />
-                                            </div>
-                                            <div>
-                                                <p className="font-black text-slate-900 group-hover:text-primary transition-colors">{po.poNumber}</p>
-                                                <div className="flex items-center gap-2 mt-0.5">
-                                                    <Clock size={12} className="text-slate-400" />
-                                                    <span className="text-xs font-bold text-slate-400">{new Date(po.createdAt).toLocaleDateString()}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-4 sm:px-8 py-4 sm:py-6">
-                                        <div className="flex items-center gap-2">
-                                            <Truck size={14} className="text-slate-400" />
-                                            <span className="font-bold text-slate-700">{po.supplier?.name}</span>
-                                        </div>
-                                    </td>
-                                    <td className="px-4 sm:px-8 py-4 sm:py-6">
-                                        <p className="font-black text-slate-900">₹{po.totalAmount.toLocaleString()}</p>
-                                    </td>
-                                    <td className="px-4 sm:px-8 py-4 sm:py-6">
-                                        <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${getStatusStyle(po.status)}`}>
-                                            {po.status}
-                                        </span>
-                                    </td>
-                                    <td className="px-8 py-6 text-right">
-                                        <div className="flex justify-end rotate group-hover:translate-x-1 transition-transform">
-                                            <ChevronRight className="text-slate-300 group-hover:text-primary" size={20} />
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                            {totalFiltered === 0 && (
-                                <tr>
-                                    <td colSpan="5" className="px-4 sm:px-8 py-12 sm:py-20 text-center">
-                                        <div className="flex flex-col items-center gap-4">
-                                            <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center text-slate-200">
-                                                <FileText size={40} />
-                                            </div>
-                                            <p className="text-slate-400 font-bold uppercase text-xs tracking-widest">No Purchase Orders found</p>
-                                        </div>
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <Pagination
-                page={page}
-                pageSize={pageSize}
-                total={totalFiltered}
-                onPageChange={setPage}
-                onPageSizeChange={(newSize) => {
-                    setPageSize(newSize);
-                    setPage(1);
-                }}
-            />
-        </div>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="animate-spin text-primary" size={32} />
+      </div>
     );
+  }
+
+  return (
+    <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-0 sm:px-2 min-w-0 animate-in fade-in duration-500 pb-10">
+      <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 sm:gap-4">
+        <div>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Purchase Orders (PO)</h1>
+          <p className="text-slate-500 text-sm font-medium">Line-item PO view for accurate pricing and tax tracking.</p>
+        </div>
+        <button
+          onClick={() => navigate("/purchase-orders/create")}
+          className="flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-2xl font-bold hover:bg-primary-hover transition-all shadow-lg shadow-primary/20 active:scale-95"
+        >
+          <Plus size={18} />
+          Create New PO
+        </button>
+      </div>
+
+      <div className="flex flex-col md:flex-row gap-3 items-start md:items-center justify-between">
+        <div className="relative group w-full md:max-w-md">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" size={18} />
+          <input
+            type="text"
+            placeholder="Search PO / vendor / item..."
+            className="w-full pl-12 pr-4 py-3.5 bg-white border-2 border-slate-100 rounded-2xl outline-none focus:border-primary/20 transition-all font-bold text-sm"
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setPage(1);
+            }}
+          />
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">PO Status</span>
+          <select
+            value={statusFilter}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setPage(1);
+            }}
+            className="h-11 px-4 bg-white border-2 border-slate-100 rounded-2xl outline-none focus:border-primary/20 transition-all text-xs font-black text-slate-700 uppercase tracking-widest"
+          >
+            {statusOptions.map((opt) => (
+              <option key={opt} value={opt}>
+                {opt}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Mobile Cards */}
+      <div className="grid grid-cols-1 gap-3 md:hidden">
+        {paginated.map((r, idx) => (
+          <button
+            key={`${r.poId}-${r.itemCode}-${idx}`}
+            onClick={() => navigate(`/purchase-orders/${r.poId}`)}
+            className="text-left bg-white rounded-[24px] border border-slate-200/60 p-4 shadow-sm active:scale-[0.99] transition"
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <div className="font-black text-slate-900 truncate">{r.poNumber}</div>
+                <div className="text-[11px] font-bold text-slate-500 truncate">{r.vendorName}</div>
+              </div>
+              <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border bg-slate-50 text-slate-600 border-slate-100 shrink-0">
+                {r.poStatus}
+              </span>
+            </div>
+            <div className="mt-3 text-[11px] font-bold text-slate-700">
+              <span className="font-black text-indigo-600 font-mono">{r.itemCode || "-"}</span> {r.itemDescription ? `· ${r.itemDescription}` : ""}
+            </div>
+            <div className="mt-2 grid grid-cols-2 gap-2 text-[11px] font-bold text-slate-600">
+              <div>Qty: <span className="font-black text-slate-900">{r.qty || "-"}</span> {r.uom}</div>
+              <div className="text-right">INR {Number(r.totalPrice || 0).toLocaleString("en-IN")}</div>
+            </div>
+          </button>
+        ))}
+        {paginated.length === 0 && (
+          <div className="px-8 py-16 text-center text-slate-400 font-bold uppercase text-xs tracking-widest">
+            No PO rows found
+          </div>
+        )}
+      </div>
+
+      {/* Desktop Table */}
+      <div className="bg-white rounded-[32px] shadow-sm border border-slate-200/60 overflow-hidden hidden md:block">
+        <div className="table-responsive custom-scrollbar">
+          <table className="w-full text-left border-collapse min-w-[1800px]">
+            <thead>
+              <tr className="bg-slate-50/50 border-b border-slate-100">
+                {[
+                  "PO Number",
+                  "PO Date",
+                  "Vendor Name",
+                  "Vendor Code",
+                  "Item Code",
+                  "Item Description",
+                  "Quantity Ordered",
+                  "UOM",
+                  "Unit Price",
+                  "Total Price",
+                  "Discount",
+                  "Tax / GST",
+                  "Delivery Date",
+                  "Delivery Location",
+                  "Payment Terms",
+                  "Shipping Method",
+                  "Cost Center",
+                  "Created By",
+                  "Approved By",
+                  "PO Status",
+                ].map((h) => (
+                  <th key={h} className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {paginated.map((r, idx) => (
+                <tr
+                  key={`${r.poId}-${r.itemCode}-${idx}`}
+                  className="group hover:bg-slate-50/50 transition-all cursor-pointer"
+                  onClick={() => navigate(`/purchase-orders/${r.poId}`)}
+                >
+                  <td className="px-6 py-4 font-black text-slate-900">{r.poNumber}</td>
+                  <td className="px-6 py-4 text-xs font-bold text-slate-600">{r.poDate ? new Date(r.poDate).toLocaleDateString("en-IN") : ""}</td>
+                  <td className="px-6 py-4 text-xs font-bold text-slate-700">{r.vendorName}</td>
+                  <td className="px-6 py-4 text-xs font-black text-indigo-600 font-mono">{r.vendorCode || "-"}</td>
+                  <td className="px-6 py-4 text-xs font-black text-indigo-600 font-mono">{r.itemCode}</td>
+                  <td className="px-6 py-4 text-xs font-bold text-slate-700">{r.itemDescription}</td>
+                  <td className="px-6 py-4 text-xs font-black text-slate-900">{r.qty}</td>
+                  <td className="px-6 py-4 text-xs font-bold text-slate-600">{r.uom}</td>
+                  <td className="px-6 py-4 text-xs font-black text-slate-900">INR {Number(r.unitPrice || 0).toLocaleString("en-IN")}</td>
+                  <td className="px-6 py-4 text-xs font-black text-slate-900">INR {Number(r.totalPrice || 0).toLocaleString("en-IN")}</td>
+                  <td className="px-6 py-4 text-xs font-black text-slate-700">INR {Number(r.discount || 0).toLocaleString("en-IN")}</td>
+                  <td className="px-6 py-4 text-xs font-bold text-slate-600">
+                    INR {Number(r.taxGst || 0).toLocaleString("en-IN")} ({Number(r.gstRate || 0)}%)
+                  </td>
+                  <td className="px-6 py-4 text-xs font-bold text-slate-600">{r.deliveryDate ? new Date(r.deliveryDate).toLocaleDateString("en-IN") : ""}</td>
+                  <td className="px-6 py-4 text-xs font-bold text-slate-600">{r.deliveryLocation || "-"}</td>
+                  <td className="px-6 py-4 text-xs font-bold text-slate-600 max-w-[220px] truncate">{r.paymentTerms || "-"}</td>
+                  <td className="px-6 py-4 text-xs font-bold text-slate-600">{r.shippingMethod || "-"}</td>
+                  <td className="px-6 py-4 text-xs font-bold text-slate-600">{r.costCenter || "-"}</td>
+                  <td className="px-6 py-4 text-xs font-bold text-slate-600">{r.createdBy || "-"}</td>
+                  <td className="px-6 py-4 text-xs font-bold text-slate-600">{r.approvedBy || "-"}</td>
+                  <td className="px-6 py-4">
+                    <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border bg-slate-50 text-slate-600 border-slate-100">
+                      {r.poStatus}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+              {paginated.length === 0 && (
+                <tr>
+                  <td colSpan={20} className="px-8 py-16 text-center text-slate-400 font-bold uppercase text-xs tracking-widest">
+                    No PO rows found
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <Pagination
+        page={page}
+        pageSize={pageSize}
+        total={totalFiltered}
+        onPageChange={setPage}
+        onPageSizeChange={(newSize) => {
+          setPageSize(newSize);
+          setPage(1);
+        }}
+      />
+    </div>
+  );
 };
 
 export default PurchaseOrderManagement;

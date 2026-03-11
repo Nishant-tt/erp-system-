@@ -40,7 +40,7 @@ const ReportCard = ({ title, value, sub, trend, isPositive, icon, colorClass }) 
 
 const Performance = () => {
     return (
-        <div className="max-w-7xl mx-auto space-y-10 animate-in fade-in duration-500 pb-20">
+        <div className="max-w-7xl mx-auto space-y-6 sm:space-y-10 px-0 sm:px-2 min-w-0 animate-in fade-in duration-500 pb-20">
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getPRsAPI } from '../../api/pr';
 import { getSuppliersAPI } from '../../api/supplier';
@@ -18,6 +18,7 @@ import {
 
 const CreatePurchaseOrder = () => {
     const navigate = useNavigate();
+    const userRole = localStorage.getItem('role');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
 
@@ -32,9 +33,17 @@ const CreatePurchaseOrder = () => {
     const [items, setItems] = useState([]);
     const [expectedDeliveryDate, setExpectedDeliveryDate] = useState('');
     const [terms, setTerms] = useState('');
+    const [deliveryLocation, setDeliveryLocation] = useState('');
+    const [shippingMethod, setShippingMethod] = useState('ROAD');
+    const [costCenter, setCostCenter] = useState('');
     const [notes, setNotes] = useState('');
 
     useEffect(() => {
+        const allowedRoles = ['Admin', 'Manager', 'Purchase Manager'];
+        if (!allowedRoles.includes(userRole)) {
+            navigate('/dashboard');
+            return;
+        }
         const fetchData = async () => {
             try {
                 const [prsData, suppliersData] = await Promise.all([
@@ -51,12 +60,13 @@ const CreatePurchaseOrder = () => {
             }
         };
         fetchData();
-    }, []);
+    }, [navigate, userRole]);
 
     const handlePRSelect = (prId) => {
         const pr = approvedPRs.find(p => p._id === prId);
         if (pr) {
             setSelectedPR(pr);
+            setCostCenter(pr.costCenter || '');
             setItems(pr.items.map(item => ({
                 item: item.item._id,
                 itemName: item.item.itemName,
@@ -66,6 +76,11 @@ const CreatePurchaseOrder = () => {
                 receivedQuantity: 0,
                 unit: item.unit || 'pcs',
                 unitCost: item.estimatedUnitCost,
+                discount: 0,
+                gstRate: Number(item.item.gstRate || 0),
+                taxableValue: item.quantity * item.estimatedUnitCost,
+                gstAmount: (item.quantity * item.estimatedUnitCost) * (Number(item.item.gstRate || 0) / 100),
+                lineTotal: (item.quantity * item.estimatedUnitCost) * (1 + (Number(item.item.gstRate || 0) / 100)),
                 totalCost: item.quantity * item.estimatedUnitCost
             })));
         } else {
@@ -77,8 +92,21 @@ const CreatePurchaseOrder = () => {
     const updateItem = (index, field, value) => {
         const newItems = [...items];
         newItems[index][field] = value;
-        if (field === 'quantity' || field === 'unitCost') {
-            newItems[index].totalCost = newItems[index].quantity * newItems[index].unitCost;
+
+        if (['quantity', 'unitCost', 'discount', 'gstRate'].includes(field)) {
+            const qty = Number(newItems[index].quantity) || 0;
+            const unitCost = Number(newItems[index].unitCost) || 0;
+            const discount = Math.max(0, Number(newItems[index].discount) || 0);
+            const gstRate = Math.max(0, Number(newItems[index].gstRate) || 0);
+
+            const taxableValue = Math.max(0, (qty * unitCost) - discount);
+            const gstAmount = taxableValue * (gstRate / 100);
+            const lineTotal = taxableValue + gstAmount;
+
+            newItems[index].taxableValue = taxableValue;
+            newItems[index].gstAmount = gstAmount;
+            newItems[index].lineTotal = lineTotal;
+            newItems[index].totalCost = taxableValue; // legacy pre-GST
         }
         setItems(newItems);
     };
@@ -87,7 +115,9 @@ const CreatePurchaseOrder = () => {
         setItems(items.filter((_, i) => i !== index));
     };
 
-    const calculateSubtotal = () => items.reduce((sum, item) => sum + item.totalCost, 0);
+    const calculateSubtotal = () => items.reduce((sum, item) => sum + (Number(item.taxableValue || item.totalCost || 0)), 0);
+    const calculateGstTotal = () => items.reduce((sum, item) => sum + (Number(item.gstAmount || 0)), 0);
+    const calculateGrandTotal = () => calculateSubtotal() + calculateGstTotal();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -108,13 +138,17 @@ const CreatePurchaseOrder = () => {
                 prReference: selectedPR?._id,
                 supplier: selectedSupplier,
                 items: items,
-                totalAmount: calculateSubtotal() * 1.18, // Simplified tax calc
+                totalAmount: 0, // backend will compute and sync to grandTotal
                 expectedDeliveryDate,
+                deliveryLocation,
+                shippingMethod,
+                costCenter: costCenter || selectedPR?.costCenter || '',
+                paymentTerms: terms,
                 terms,
                 notes,
-                status: 'OPEN'
+                status: 'DRAFT'
             });
-            setMessage({ type: 'success', text: 'Purchase Order created and issued!' });
+            setMessage({ type: 'success', text: 'Purchase Order created and submitted for approval!' });
             setTimeout(() => navigate('/purchase-orders'), 1500);
         } catch (error) {
             setMessage({ type: 'error', text: error.response?.data?.message || 'Failed to create PO.' });
@@ -132,7 +166,7 @@ const CreatePurchaseOrder = () => {
     }
 
     return (
-        <div className="max-w-6xl mx-auto space-y-8 animate-in slide-in-from-bottom-8 duration-500 pb-20">
+        <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8 px-2 sm:px-0 min-w-0 animate-in slide-in-from-bottom-8 duration-500 pb-20">
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
@@ -243,7 +277,7 @@ const CreatePurchaseOrder = () => {
                                             </div>
                                             <div className="col-span-4 md:col-span-2 text-right">
                                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Amount</p>
-                                                <p className="font-black text-slate-900 text-sm">₹{item.totalCost.toLocaleString()}</p>
+                                                <p className="font-black text-slate-900 text-sm">â‚¹{item.totalCost.toLocaleString()}</p>
                                             </div>
                                         </div>
                                         <button
@@ -294,6 +328,41 @@ const CreatePurchaseOrder = () => {
                                 />
                             </div>
                             <div className="space-y-1.5">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Delivery Location</label>
+                                <input
+                                    type="text"
+                                    placeholder="e.g. Main Warehouse"
+                                    className="w-full px-5 py-3 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-primary/20 font-bold text-sm"
+                                    value={deliveryLocation}
+                                    onChange={(e) => setDeliveryLocation(e.target.value)}
+                                />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Shipping Method</label>
+                                    <select
+                                        className="w-full px-5 py-3 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-primary/20 font-bold text-sm"
+                                        value={shippingMethod}
+                                        onChange={(e) => setShippingMethod(e.target.value)}
+                                    >
+                                        <option value="ROAD">ROAD</option>
+                                        <option value="AIR">AIR</option>
+                                        <option value="SEA">SEA</option>
+                                        <option value="COURIER">COURIER</option>
+                                    </select>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Cost Center</label>
+                                    <input
+                                        type="text"
+                                        placeholder="Cost Center"
+                                        className="w-full px-5 py-3 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-primary/20 font-bold text-sm"
+                                        value={costCenter}
+                                        onChange={(e) => setCostCenter(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                            <div className="space-y-1.5">
                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">External Notes</label>
                                 <textarea
                                     rows="2"
@@ -314,11 +383,11 @@ const CreatePurchaseOrder = () => {
                         <div className="space-y-4 mb-8">
                             <div className="flex justify-between items-center text-slate-400">
                                 <span className="text-[10px] font-bold uppercase tracking-widest">Basic Value</span>
-                                <span className="text-sm font-black text-white">₹{calculateSubtotal().toLocaleString()}</span>
+                                <span className="text-sm font-black text-white">â‚¹{calculateSubtotal().toLocaleString()}</span>
                             </div>
                             <div className="flex justify-between items-center text-slate-400">
                                 <span className="text-[10px] font-bold uppercase tracking-widest">GST (18%)</span>
-                                <span className="text-sm font-black text-white">₹{(calculateSubtotal() * 0.18).toLocaleString()}</span>
+                                <span className="text-sm font-black text-white">â‚¹{(calculateSubtotal() * 0.18).toLocaleString()}</span>
                             </div>
                             <div className="pt-4 border-t border-white/10 flex justify-between items-end">
                                 <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Grand Total</span>
@@ -347,3 +416,4 @@ const CreatePurchaseOrder = () => {
 };
 
 export default CreatePurchaseOrder;
+

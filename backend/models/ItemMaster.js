@@ -14,6 +14,7 @@ const itemMasterSchema = new mongoose.Schema(
         minOrderQty: { type: Number, default: 1 },
         leadTimeDays: { type: Number, default: 0 },
         preferredSupplier: { type: mongoose.Schema.Types.ObjectId, ref: "Supplier", default: null },
+        stockOnHand: { type: Number, default: 0, min: 0 },
         isActive: { type: Boolean, default: true },
     },
     { timestamps: true }

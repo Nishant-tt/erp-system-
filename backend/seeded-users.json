@@ -1,0 +1,62 @@
+[
+  {
+    "id": "69b017c376777907ccf0d64a",
+    "email": "pr.approver@example.com",
+    "role": "Department Head",
+    "password": "sjFkcN3PxDwOol"
+  },
+  {
+    "id": "69b017c476777907ccf0d64e",
+    "email": "budget.owner@example.com",
+    "role": "Budget Owner",
+    "password": "UimisvvYR4Mv0J"
+  },
+  {
+    "id": "69b017c476777907ccf0d652",
+    "email": "purchase.manager@example.com",
+    "role": "Purchase Manager",
+    "password": "tpLQOdkMsnUKMa"
+  },
+  {
+    "id": "69b017c476777907ccf0d656",
+    "email": "finance.head@example.com",
+    "role": "Finance Head",
+    "password": "ahW4nPp0bd54UA"
+  },
+  {
+    "id": "69b017c476777907ccf0d65a",
+    "email": "director@example.com",
+    "role": "Director",
+    "password": "cV4UNyfe1bcjpm"
+  },
+  {
+    "id": "69b017c476777907ccf0d65e",
+    "email": "gm@example.com",
+    "role": "GM",
+    "password": "mG7KQjtxJOkzJ0"
+  },
+  {
+    "id": "69b017c476777907ccf0d662",
+    "email": "store.manager@example.com",
+    "role": "Store Manager",
+    "password": "haNerOHFMFOdsw"
+  },
+  {
+    "id": "69b017c476777907ccf0d666",
+    "email": "quality.inspector@example.com",
+    "role": "Quality Inspector",
+    "password": "oEU61nRqhNd15F"
+  },
+  {
+    "id": "69b017c476777907ccf0d66a",
+    "email": "inventory.controller@example.com",
+    "role": "Inventory Controller",
+    "password": "EC4NZssosrRQT9"
+  },
+  {
+    "id": "69b017c476777907ccf0d66e",
+    "email": "ap@example.com",
+    "role": "Accounts Payable",
+    "password": "3pFjuMsu5fPhBo"
+  }
+]

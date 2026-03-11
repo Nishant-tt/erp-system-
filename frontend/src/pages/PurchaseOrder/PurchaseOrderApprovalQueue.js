@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getPOsAPI } from "../../api/po";
 import { CheckCircle, Clock, ArrowRight, Search, ShieldCheck, Loader2 } from "lucide-react";
@@ -11,19 +11,21 @@ export default function PurchaseOrderApprovalQueue() {
   const userRole = localStorage.getItem("role");
 
   useEffect(() => {
-    if (userRole !== "Admin" && userRole !== "Manager") {
+    const allowedRoles = ["Admin", "Manager", "Purchase Manager", "Finance Head", "Director", "GM"];
+    if (!allowedRoles.includes(userRole)) {
       navigate("/dashboard");
       return;
     }
+
     const load = async () => {
       try {
         const data = await getPOsAPI();
-        // Treat DRAFT as "pending approval" stage
-        setPOs((data || []).filter((po) => po.status === "DRAFT"));
+        setPOs((data || []).filter((po) => po.approvalStatus === "PENDING_APPROVAL"));
       } finally {
         setIsLoading(false);
       }
     };
+
     load();
   }, [userRole, navigate]);
 
@@ -78,7 +80,7 @@ export default function PurchaseOrderApprovalQueue() {
                   </span>
                   <div className="flex items-center gap-1.5 text-[10px] font-black text-amber-600 uppercase tracking-widest bg-amber-50 px-3 py-1 rounded-full border border-amber-100">
                     <Clock size={12} />
-                    Draft
+                    Pending
                   </div>
                 </div>
                 <p className="text-sm font-black text-slate-900">{po.supplier?.name}</p>
@@ -100,10 +102,9 @@ export default function PurchaseOrderApprovalQueue() {
             <CheckCircle size={40} />
           </div>
           <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Queue Clear</h3>
-          <p className="text-slate-500 font-medium max-w-sm mx-auto">No draft purchase orders awaiting approval.</p>
+          <p className="text-slate-500 font-medium max-w-sm mx-auto">No purchase orders awaiting approval.</p>
         </div>
       )}
     </div>
   );
 }
-

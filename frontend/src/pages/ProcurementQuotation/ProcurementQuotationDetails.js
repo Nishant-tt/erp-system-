@@ -6,7 +6,9 @@ import {
   rejectProcurementQuotationAPI,
   sendProcurementQuotationToSuppliersAPI,
   submitProcurementQuotationAPI,
+  exportProcurementQuotationAPI,
 } from "../../api/procurementQuotation";
+import { downloadAxiosBlobResponse } from "../../utils/downloadFile";
 import {
   ArrowLeft,
   Loader2,
@@ -18,6 +20,8 @@ import {
   ThumbsUp,
   ThumbsDown,
   IndianRupee,
+  FileDown,
+  FileText,
 } from "lucide-react";
 
 export default function ProcurementQuotationDetails() {
@@ -47,9 +51,23 @@ export default function ProcurementQuotationDetails() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  const canApprove = (userRole === "Admin" || userRole === "Manager") && q?.status === "PENDING_APPROVAL";
-  const canSubmit = userRole === "Admin" && q?.status === "DRAFT";
-  const canSend = userRole === "Admin" && q?.status === "APPROVED";
+  const approverRoles = ["Admin", "Purchase Manager", "Finance Head", "Director", "GM"];
+  const canApprove = approverRoles.includes(userRole) && q?.status === "PENDING_APPROVAL";
+  const canSubmit = (userRole === "Admin" || userRole === "Purchase Manager") && q?.status === "DRAFT";
+  const canSend = (userRole === "Admin" || userRole === "Purchase Manager") && q?.status === "APPROVED";
+
+  const handleExport = async (format) => {
+    setIsActioning(true);
+    try {
+      const res = await exportProcurementQuotationAPI(id, format);
+      const ext = format === "docx" ? "docx" : "pdf";
+      downloadAxiosBlobResponse(res, `${q?.quotationNumber || "RFQ"}.${ext}`);
+    } catch {
+      setMessage({ type: "error", text: "Failed to export quotation." });
+    } finally {
+      setIsActioning(false);
+    }
+  };
 
   const handleSubmit = async () => {
     setIsActioning(true);
@@ -144,7 +162,7 @@ export default function ProcurementQuotationDetails() {
   return (
     <div className="max-w-5xl mx-auto space-y-6 sm:space-y-8 px-2 sm:px-0 min-w-0 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-        <div>
+        <div className="min-w-0">
           <button
             onClick={() => navigate("/procurement-quotations")}
             className="flex items-center gap-2 text-slate-400 hover:text-primary transition-colors font-bold text-xs uppercase tracking-widest mb-2"
@@ -152,7 +170,7 @@ export default function ProcurementQuotationDetails() {
             <ArrowLeft size={14} />
             Back to List
           </button>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 flex-wrap">
             <h1 className="text-3xl font-black text-slate-900 tracking-tight">{q.quotationNumber}</h1>
             <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border flex items-center gap-2 ${statusPill}`}>
               <StatusIcon size={14} />
@@ -162,6 +180,25 @@ export default function ProcurementQuotationDetails() {
           <p className="text-slate-500 font-medium mt-1">
             PR: <span className="font-black text-slate-700">{q.prReference?.prNumber}</span>
           </p>
+        </div>
+
+        <div className="flex flex-wrap gap-2 w-full md:w-auto">
+          <button
+            onClick={() => handleExport("pdf")}
+            disabled={isActioning}
+            className="flex-1 md:flex-none px-4 py-3 rounded-2xl bg-slate-900 text-white font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-slate-800 transition-all disabled:opacity-50"
+          >
+            <FileDown size={14} />
+            Generate PDF
+          </button>
+          <button
+            onClick={() => handleExport("docx")}
+            disabled={isActioning}
+            className="flex-1 md:flex-none px-4 py-3 rounded-2xl bg-white border border-slate-200 text-slate-700 font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:border-primary/20 hover:text-slate-900 transition-all disabled:opacity-50"
+          >
+            <FileText size={14} />
+            Generate Word
+          </button>
         </div>
       </div>
 
@@ -268,7 +305,7 @@ export default function ProcurementQuotationDetails() {
               )}
 
               {canApprove && (
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <button
                     onClick={handleApprove}
                     disabled={isActioning}
@@ -316,4 +353,3 @@ export default function ProcurementQuotationDetails() {
     </div>
   );
 }
-

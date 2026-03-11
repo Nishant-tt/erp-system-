@@ -18,6 +18,7 @@ import {
 
 const CreateGRN = () => {
     const navigate = useNavigate();
+    const userRole = localStorage.getItem('role');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
 
@@ -31,9 +32,16 @@ const CreateGRN = () => {
     const [vehicleNumber, setVehicleNumber] = useState('');
     const [billNumber, setBillNumber] = useState('');
     const [billDate, setBillDate] = useState('');
+    const [warehouseLocation, setWarehouseLocation] = useState('');
+    const [inspectionStatus, setInspectionStatus] = useState('PENDING');
     const [remarks, setRemarks] = useState('');
 
     useEffect(() => {
+        const allowedRoles = ['Admin', 'Store Manager', 'Quality Inspector', 'Inventory Controller'];
+        if (!allowedRoles.includes(userRole)) {
+            navigate('/dashboard');
+            return;
+        }
         const fetchPOs = async () => {
             try {
                 const data = await getPOsAPI();
@@ -46,7 +54,7 @@ const CreateGRN = () => {
             }
         };
         fetchPOs();
-    }, []);
+    }, [navigate, userRole]);
 
     const handlePOSelect = (poId) => {
         const po = openPOs.find(p => p._id === poId);
@@ -101,6 +109,8 @@ const CreateGRN = () => {
                 vehicleNumber,
                 billNumber,
                 billDate,
+                warehouseLocation,
+                inspectionStatus,
                 remarks
             });
             setMessage({ type: 'success', text: 'Goods Receipt recorded successfully!' });
@@ -121,7 +131,7 @@ const CreateGRN = () => {
     }
 
     return (
-        <div className="max-w-6xl mx-auto space-y-8 animate-in slide-in-from-bottom-8 duration-500 pb-20">
+        <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8 px-2 sm:px-0 min-w-0 animate-in slide-in-from-bottom-8 duration-500 pb-20">
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
@@ -289,6 +299,28 @@ const CreateGRN = () => {
                                     value={billDate}
                                     onChange={(e) => setBillDate(e.target.value)}
                                 />
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Warehouse Location</label>
+                                <input
+                                    type="text"
+                                    placeholder="e.g. Main Warehouse"
+                                    className="w-full px-5 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-emerald-500/20 font-bold text-sm"
+                                    value={warehouseLocation}
+                                    onChange={(e) => setWarehouseLocation(e.target.value)}
+                                />
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Inspection Status</label>
+                                <select
+                                    className="w-full px-5 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-emerald-500/20 font-bold text-sm"
+                                    value={inspectionStatus}
+                                    onChange={(e) => setInspectionStatus(e.target.value)}
+                                >
+                                    <option value="PENDING">PENDING</option>
+                                    <option value="PASSED">PASSED</option>
+                                    <option value="FAILED">FAILED</option>
+                                </select>
                             </div>
                             <div className="space-y-1.5">
                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Remarks</label>

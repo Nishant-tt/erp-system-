@@ -131,7 +131,7 @@ const ProfilePage = () => {
     }
 
     return (
-        <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in duration-500">
+        <div className="max-w-5xl mx-auto space-y-6 sm:space-y-8 px-2 sm:px-0 min-w-0 animate-in fade-in duration-500">
             {/* Header Section */}
             <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-200/60 relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full -mr-32 -mt-32 blur-3xl transition-transform group-hover:scale-110"></div>

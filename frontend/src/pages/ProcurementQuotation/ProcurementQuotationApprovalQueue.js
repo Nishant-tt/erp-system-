@@ -11,7 +11,8 @@ export default function ProcurementQuotationApprovalQueue() {
   const userRole = localStorage.getItem("role");
 
   useEffect(() => {
-    if (userRole !== "Admin" && userRole !== "Manager") {
+    const allowedRoles = ["Admin", "Purchase Manager", "Finance Head", "Director", "GM"];
+    if (!allowedRoles.includes(userRole)) {
       navigate("/dashboard");
       return;
     }
@@ -117,4 +118,3 @@ export default function ProcurementQuotationApprovalQueue() {
     </div>
   );
 }
-

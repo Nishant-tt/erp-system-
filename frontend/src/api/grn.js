@@ -24,3 +24,10 @@ export const rejectGRNAPI = async (id, reason = "") => {
     const response = await axiosInstance.patch(`/api/grns/${id}/reject`, { reason });
     return response.data;
 };
+
+export const exportGRNAPI = async (id, format = "pdf") => {
+    const response = await axiosInstance.get(`/api/grns/${id}/export/${format}`, {
+        responseType: "blob"
+    });
+    return response;
+};

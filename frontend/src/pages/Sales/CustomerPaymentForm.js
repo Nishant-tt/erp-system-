@@ -78,7 +78,7 @@ const CustomerPaymentForm = () => {
     };
 
     return (
-        <div className="p-8 pb-32 max-w-7xl mx-auto text-slate-900">
+        <div className="p-4 sm:p-6 md:p-8 pb-24 sm:pb-32 max-w-7xl mx-auto min-w-0 text-slate-900">
             {/* Header */}
             <div className="flex items-center gap-4 mb-8">
                 <button onClick={() => navigate('/customer-payments')} className="w-10 h-10 bg-white border border-slate-200 rounded-xl flex items-center justify-center text-slate-500 hover:bg-slate-50">

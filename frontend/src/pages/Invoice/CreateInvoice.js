@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getGRNsAPI } from '../../api/grn';
 import { createInvoiceAPI } from '../../api/purchaseInvoice';
@@ -19,6 +19,7 @@ import {
 
 const CreateInvoice = () => {
     const navigate = useNavigate();
+    const userRole = localStorage.getItem('role');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
 
@@ -34,11 +35,16 @@ const CreateInvoice = () => {
     const [items, setItems] = useState([]);
 
     useEffect(() => {
+        const allowedRoles = ['Admin', 'Accounts Payable'];
+        if (!allowedRoles.includes(userRole)) {
+            navigate('/dashboard');
+            return;
+        }
         const fetchGRNs = async () => {
             try {
                 const data = await getGRNsAPI();
                 // We only show GRNs that haven't been invoiced (this is simplified logic)
-                setGRNs(data);
+                setGRNs((data || []).filter(g => g.verificationStatus === 'VERIFIED'));
             } catch (err) {
                 console.error('Failed to load GRNs:', err);
                 setMessage({ type: 'error', text: 'Failed to load receipt data.' });
@@ -47,7 +53,7 @@ const CreateInvoice = () => {
             }
         };
         fetchGRNs();
-    }, []);
+    }, [navigate, userRole]);
 
     const handleGRNSelect = (grnId) => {
         const grn = grns.find(g => g._id === grnId);
@@ -57,10 +63,11 @@ const CreateInvoice = () => {
                 item: item.item._id,
                 itemName: item.item.itemName,
                 itemCode: item.item.itemCode,
-                quantity: item.receivedQuantity,
+                description: item.item.description || item.item.itemName,
+                quantity: Math.max(0, item.receivedQuantity - (item.rejectedQuantity || 0)),
                 unitCost: item.unitCost,
-                taxAmount: (item.receivedQuantity * item.unitCost) * 0.18,
-                totalCost: (item.receivedQuantity * item.unitCost) * 1.18
+                taxAmount: (Math.max(0, item.receivedQuantity - (item.rejectedQuantity || 0)) * item.unitCost) * 0.18,
+                totalCost: (Math.max(0, item.receivedQuantity - (item.rejectedQuantity || 0)) * item.unitCost) * 1.18
             })));
         } else {
             setSelectedGRN(null);
@@ -119,7 +126,7 @@ const CreateInvoice = () => {
     }
 
     return (
-        <div className="max-w-6xl mx-auto space-y-8 animate-in slide-in-from-bottom-8 duration-500 pb-20">
+        <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8 px-2 sm:px-0 min-w-0 animate-in slide-in-from-bottom-8 duration-500 pb-20">
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
@@ -189,11 +196,11 @@ const CreateInvoice = () => {
                                                 </div>
                                                 <div>
                                                     <p className="text-sm font-bold text-slate-900">{item.itemName}</p>
-                                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{item.quantity} units @ ₹{item.unitCost}</p>
+                                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{item.quantity} units @ â‚¹{item.unitCost}</p>
                                                 </div>
                                             </div>
                                             <div className="text-right">
-                                                <p className="text-sm font-black text-slate-900">₹{item.totalCost.toLocaleString()}</p>
+                                                <p className="text-sm font-black text-slate-900">â‚¹{item.totalCost.toLocaleString()}</p>
                                                 <p className="text-[9px] font-bold text-slate-400 uppercase">Incl. GST</p>
                                             </div>
                                         </div>
@@ -294,3 +301,4 @@ const CreateInvoice = () => {
 };
 
 export default CreateInvoice;
+

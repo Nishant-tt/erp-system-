@@ -87,7 +87,7 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="h-screen bg-[#F8FAFC] flex font-sans overflow-hidden">
+    <div className="min-h-screen bg-[#F8FAFC] flex flex-col lg:flex-row font-sans overflow-x-hidden">
       {/* Left Side - Visual/Marketing (Hidden on mobile) */}
       <div className="hidden lg:flex lg:w-1/2 bg-[#0F172A] relative overflow-hidden items-center justify-center p-12">
         <div className="absolute top-0 left-0 w-full h-full opacity-20">
@@ -125,8 +125,8 @@ const LoginPage = () => {
       </div>
 
       {/* Right Side - Login Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-white lg:bg-[#F8FAFC] overflow-y-auto">
-        <div className="w-full max-w-[420px]">
+      <div className="w-full min-w-0 lg:w-1/2 flex items-center justify-center p-4 sm:p-6 md:p-8 bg-white lg:bg-[#F8FAFC] overflow-y-auto overflow-x-hidden">
+        <div className="w-full max-w-[420px] min-w-0">
           <div className="mb-10">
             <div className="lg:hidden flex items-center gap-2 mb-8">
               <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">

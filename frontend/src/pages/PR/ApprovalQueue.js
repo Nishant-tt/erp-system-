@@ -21,7 +21,8 @@ const ApprovalQueue = () => {
     const userRole = localStorage.getItem('role');
 
     useEffect(() => {
-        if (userRole !== 'Admin' && userRole !== 'Manager') {
+        const allowedRoles = ['Admin', 'Manager', 'Department Head', 'Budget Owner'];
+        if (!allowedRoles.includes(userRole)) {
             navigate('/dashboard');
             return;
         }
@@ -55,7 +56,7 @@ const ApprovalQueue = () => {
     }
 
     return (
-        <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
+        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-8 px-0 sm:px-2 min-w-0 animate-in fade-in duration-500">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
                     <h1 className="text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3">

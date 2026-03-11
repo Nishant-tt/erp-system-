@@ -63,3 +63,13 @@ export const sendProcurementQuotationToSuppliersAPI = async (id) => {
   }
 };
 
+export const exportProcurementQuotationAPI = async (id, format = "pdf") => {
+  try {
+    const res = await axiosInstance.get(`/api/procurement-quotations/${id}/export/${format}`, {
+      responseType: "blob",
+    });
+    return res;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};

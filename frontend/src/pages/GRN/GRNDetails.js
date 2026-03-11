@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getGRNByIdAPI, verifyGRNAPI, rejectGRNAPI } from "../../api/grn";
+import { getGRNByIdAPI, verifyGRNAPI, rejectGRNAPI, exportGRNAPI } from "../../api/grn";
+import { downloadAxiosBlobResponse } from "../../utils/downloadFile";
 import {
   ArrowLeft,
   Loader2,
@@ -10,6 +11,8 @@ import {
   XCircle,
   ThumbsUp,
   ThumbsDown,
+  FileDown,
+  FileText,
 } from "lucide-react";
 
 export default function GRNDetails() {
@@ -39,8 +42,21 @@ export default function GRNDetails() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  const canVerify =
-    (userRole === "Admin" || userRole === "Manager") && grn?.verificationStatus === "PENDING";
+  const verifierRoles = ["Admin", "Store Manager", "Quality Inspector", "Inventory Controller"];
+  const canVerify = verifierRoles.includes(userRole) && grn?.verificationStatus === "PENDING";
+
+  const handleExport = async (format) => {
+    setIsActioning(true);
+    try {
+      const res = await exportGRNAPI(id, format);
+      const ext = format === "docx" ? "docx" : "pdf";
+      downloadAxiosBlobResponse(res, `${grn?.grnNumber || "GRN"}.${ext}`);
+    } catch {
+      setMessage({ type: "error", text: "Failed to export GRN." });
+    } finally {
+      setIsActioning(false);
+    }
+  };
 
   const handleVerify = async () => {
     setIsActioning(true);
@@ -105,7 +121,7 @@ export default function GRNDetails() {
   return (
     <div className="max-w-5xl mx-auto space-y-6 sm:space-y-8 px-2 sm:px-0 min-w-0 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-        <div>
+        <div className="min-w-0">
           <button
             onClick={() => navigate("/grns")}
             className="flex items-center gap-2 text-slate-400 hover:text-emerald-600 transition-colors font-bold text-xs uppercase tracking-widest mb-2"
@@ -113,7 +129,7 @@ export default function GRNDetails() {
             <ArrowLeft size={14} />
             Back to GRNs
           </button>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 flex-wrap">
             <h1 className="text-3xl font-black text-slate-900 tracking-tight">{grn.grnNumber}</h1>
             <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border flex items-center gap-2 ${verificationPill}`}>
               <VerificationIcon size={14} />
@@ -121,9 +137,28 @@ export default function GRNDetails() {
             </span>
           </div>
           <p className="text-slate-500 font-medium mt-1">
-            PO: <span className="font-black text-slate-700">{grn.poReference?.poNumber}</span> · Supplier:{" "}
+            PO: <span className="font-black text-slate-700">{grn.poReference?.poNumber}</span> - Supplier:{" "}
             <span className="font-black text-slate-700">{grn.supplier?.name}</span>
           </p>
+        </div>
+
+        <div className="flex flex-wrap gap-2 w-full md:w-auto">
+          <button
+            onClick={() => handleExport("pdf")}
+            disabled={isActioning}
+            className="flex-1 md:flex-none px-4 py-3 rounded-2xl bg-slate-900 text-white font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-slate-800 transition-all disabled:opacity-50"
+          >
+            <FileDown size={14} />
+            Generate PDF
+          </button>
+          <button
+            onClick={() => handleExport("docx")}
+            disabled={isActioning}
+            className="flex-1 md:flex-none px-4 py-3 rounded-2xl bg-white border border-slate-200 text-slate-700 font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:border-emerald-500/20 hover:text-slate-900 transition-all disabled:opacity-50"
+          >
+            <FileText size={14} />
+            Generate Word
+          </button>
         </div>
       </div>
 
@@ -192,7 +227,7 @@ export default function GRNDetails() {
                 value={comments}
                 onChange={(e) => setComments(e.target.value)}
               />
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <button
                   onClick={handleVerify}
                   disabled={isActioning}
@@ -217,4 +252,3 @@ export default function GRNDetails() {
     </div>
   );
 }
-

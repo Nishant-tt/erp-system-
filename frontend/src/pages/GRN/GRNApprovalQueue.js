@@ -11,7 +11,8 @@ export default function GRNApprovalQueue() {
   const userRole = localStorage.getItem("role");
 
   useEffect(() => {
-    if (userRole !== "Admin" && userRole !== "Manager") {
+    const allowedRoles = ["Admin", "Store Manager", "Quality Inspector", "Inventory Controller"];
+    if (!allowedRoles.includes(userRole)) {
       navigate("/dashboard");
       return;
     }
@@ -110,4 +111,3 @@ export default function GRNApprovalQueue() {
     </div>
   );
 }
-
