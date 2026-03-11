@@ -25,12 +25,9 @@ exports.createPR = async (req, res) => {
 exports.getPRs = async (req, res) => {
     try {
         let query = {};
-        // Super Admin sees all PRs
-        // Admin (Module Admin) only sees PRs from their department
-        if (req.user.role === 'Super Admin') {
+        // Admin sees all PRs
+        if (req.user.role === "Admin") {
             query = {};
-        } else if (req.user.role === 'Admin') {
-            query = { department: req.user.department };
         } else {
             // Managers and Users
             query = {

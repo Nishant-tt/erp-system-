@@ -10,7 +10,8 @@ import {
     FileText,
     ChevronRight,
     Loader2,
-    IndianRupee
+    IndianRupee,
+    Download
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Pagination from '../../components/common/Pagination';
@@ -70,6 +71,29 @@ const PRManagement = () => {
     const startIndex = (page - 1) * pageSize;
     const paginatedPRs = filteredPRs.slice(startIndex, startIndex + pageSize);
 
+    const downloadCsv = () => {
+        const rows = filteredPRs.map(pr => ({
+            prNumber: pr.prNumber,
+            status: pr.status,
+            department: pr.department?.name || '',
+            requestedBy: pr.requestedBy?.name || '',
+            totalAmount: pr.totalAmount,
+            createdAt: pr.createdAt
+        }));
+        const headers = Object.keys(rows[0] || { prNumber: '', status: '', department: '', requestedBy: '', totalAmount: '', createdAt: '' });
+        const csv = [
+            headers.join(','),
+            ...rows.map(r => headers.map(h => `"${String(r[h] ?? '').replaceAll('"', '""')}"`).join(','))
+        ].join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `PRs_${new Date().toISOString().slice(0, 10)}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+
     if (isLoading) {
         return (
             <div className="flex items-center justify-center min-h-[400px]">
@@ -79,8 +103,8 @@ const PRManagement = () => {
     }
 
     return (
-        <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-8 px-0 sm:px-2 min-w-0 animate-in fade-in duration-500">
+            <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 sm:gap-6">
                 <div>
                     <h1 className="text-3xl font-black text-slate-900 tracking-tight">Requisition Dashboard</h1>
                     <p className="text-slate-500 font-medium">Manage and track your procurement requests.</p>
@@ -91,6 +115,13 @@ const PRManagement = () => {
                 >
                     <Plus size={18} />
                     New Requisition
+                </button>
+                <button
+                    onClick={downloadCsv}
+                    className="flex items-center gap-3 px-8 py-4 bg-white text-slate-700 rounded-[24px] font-black text-sm uppercase tracking-widest border-2 border-slate-100 hover:border-slate-200 transition-all shadow-sm hover:-translate-y-1 active:translate-y-0"
+                >
+                    <Download size={18} />
+                    Download
                 </button>
             </div>
 
@@ -121,12 +152,12 @@ const PRManagement = () => {
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                     {['ALL', 'DRAFT', 'PENDING_APPROVAL', 'APPROVED', 'REJECTED'].map(status => (
                         <button
                             key={status}
                             onClick={() => setStatusFilter(status)}
-                            className={`px-6 py-4 rounded-2xl border-2 text-[10px] font-black uppercase tracking-widest transition-all ${statusFilter === status
+                            className={`px-4 sm:px-6 py-3 sm:py-4 rounded-2xl border-2 text-[10px] font-black uppercase tracking-widest transition-all ${statusFilter === status
                                     ? 'bg-slate-900 border-slate-900 text-white'
                                     : 'bg-white border-slate-100 text-slate-400 hover:border-slate-200'
                                 }`}

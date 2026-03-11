@@ -66,18 +66,25 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     };
 
     return (
-        <aside className={`${isOpen ? 'w-64' : 'w-16'} h-screen bg-[#0F172A] border-r border-slate-800 transition-all duration-300 flex flex-col fixed left-0 top-0 z-50 group`}>
-
-            {/* Toggle Bar - Clickable strip on the right edge */}
+        <aside
+            className={`
+                h-screen bg-[#0F172A] border-r border-slate-800 transition-all duration-300 flex flex-col fixed left-0 top-0 z-50 group
+                w-64
+                ${isOpen ? 'translate-x-0 shadow-2xl md:w-64' : '-translate-x-full md:translate-x-0 md:w-16'}
+            `}
+            aria-hidden={!isOpen}
+        >
+            {/* Toggle Bar - Always visible on desktop so user always knows where to open/close sidebar */}
             <button
                 onClick={toggleSidebar}
-                className="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-50 border-4 border-[#0F172A]"
+                aria-label={isOpen ? 'Close menu' : 'Open menu'}
+                className="absolute -right-3 top-1/2 -translate-y-1/2 w-7 h-14 sm:w-6 sm:h-12 bg-blue-600 hover:bg-blue-500 rounded-full hidden md:flex items-center justify-center text-white shadow-lg z-50 border-4 border-[#0F172A] transition-colors hover:scale-105 active:scale-95"
             >
                 {isOpen ? <ChevronLeft size={14} /> : <ChevronRight size={14} />}
             </button>
 
-            <div className="h-16 flex items-center px-4 border-b border-slate-800/50 bg-slate-900/50">
-                <div className="flex items-center gap-3">
+            <div className="h-14 sm:h-16 flex items-center justify-between px-3 sm:px-4 border-b border-slate-800/50 bg-slate-900/50 shrink-0">
+                <div className="flex items-center gap-3 min-w-0">
                     <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shrink-0 shadow-lg shadow-blue-500/20 ring-2 ring-blue-400/20">
                         <ShieldCheck className="text-white" size={20} />
                     </div>
@@ -113,13 +120,15 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                             // Hide Admin Console module for non-admin roles
                             if (
                                 item.name === 'Admin Console' &&
-                                !(userRole === 'Admin' || userRole === 'Super Admin')
+                                userRole !== "Admin"
                             ) {
                                 return null;
                             }
 
                             const sortedMenus = (item.menus || [])
                                 .filter((m) => m.isActive)
+                                // Remove Purchase Invoice / Vendor Payments from Procurement flow
+                                .filter((m) => !["/invoices", "/invoices/create", "/payments", "/payments/process"].includes(m.path))
                                 .sort((a, b) => (a.order || 0) - (b.order || 0));
 
                             return (

@@ -14,11 +14,10 @@ const bcrypt = require("bcrypt");
 exports.getUsers = async (req, res) => {
   let query = {};
 
-  // Super Admin sees all users
-  // Admin (Module Admin) only sees users in their department
-  if (req.user.role === 'Admin') {
-    query = { department: req.user.department };
-  } else if (req.user.role !== 'Super Admin') {
+  // Admin sees all users
+  if (req.user.role === "Admin") {
+    query = {};
+  } else {
     // Other roles shouldn't really be calling this, but safety first
     query = { _id: req.user.id };
   }

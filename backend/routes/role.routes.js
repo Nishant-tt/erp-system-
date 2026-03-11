@@ -28,7 +28,7 @@ const role = require("../middleware/role.middleware");
  *       403:
  *         description: Forbidden
  */
-router.get("/", auth, role(["Admin", "Super Admin"]), roleCtrl.getRoles);
+router.get("/", auth, role(["Admin"]), roleCtrl.getRoles);
 
 /**
  * @swagger
@@ -53,8 +53,8 @@ router.get("/", auth, role(["Admin", "Super Admin"]), roleCtrl.getRoles);
  *       400:
  *         description: Bad request
  */
-router.post("/", auth, role(["Super Admin"]), roleCtrl.createRole);
-router.put("/:id", auth, role(["Super Admin"]), roleCtrl.updateRole);
-router.delete("/:id", auth, role(["Super Admin"]), roleCtrl.deleteRole);
+router.post("/", auth, role(["Admin"]), roleCtrl.createRole);
+router.put("/:id", auth, role(["Admin"]), roleCtrl.updateRole);
+router.delete("/:id", auth, role(["Admin"]), roleCtrl.deleteRole);
 
 module.exports = router;

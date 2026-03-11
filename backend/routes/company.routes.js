@@ -5,6 +5,6 @@ const auth = require("../middleware/auth.middleware");
 const role = require("../middleware/role.middleware");
 
 router.get("/", auth, companyCtrl.getCompany);
-router.put("/", auth, role(["Super Admin"]), companyCtrl.updateCompany);
+router.put("/", auth, role(["Admin"]), companyCtrl.updateCompany);
 
 module.exports = router;

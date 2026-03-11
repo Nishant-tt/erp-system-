@@ -9,7 +9,8 @@ import {
     Package,
     Loader2,
     Calendar,
-    Hash
+    Hash,
+    Download
 } from 'lucide-react';
 
 const GRNManagement = () => {
@@ -39,6 +40,29 @@ const GRNManagement = () => {
         grn.poReference?.poNumber.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    const downloadCsv = () => {
+        const rows = filteredGRNs.map(grn => ({
+            grnNumber: grn.grnNumber,
+            supplier: grn.supplier?.name || '',
+            poNumber: grn.poReference?.poNumber || '',
+            billNumber: grn.billNumber || '',
+            receivedDate: grn.receivedDate,
+            itemsCount: grn.items?.length || 0
+        }));
+        const headers = Object.keys(rows[0] || { grnNumber: '', supplier: '', poNumber: '', billNumber: '', receivedDate: '', itemsCount: '' });
+        const csv = [
+            headers.join(','),
+            ...rows.map(r => headers.map(h => `"${String(r[h] ?? '').replaceAll('"', '""')}"`).join(','))
+        ].join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `GRNs_${new Date().toISOString().slice(0, 10)}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+
     if (isLoading) {
         return (
             <div className="flex items-center justify-center min-h-[400px]">
@@ -48,7 +72,7 @@ const GRNManagement = () => {
     }
 
     return (
-        <div className="max-w-7xl mx-auto space-y-6 animate-in fade-in duration-500 pb-10">
+        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-0 sm:px-2 min-w-0 animate-in fade-in duration-500 pb-10">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h1 className="text-2xl font-black text-slate-900 tracking-tight">Goods Receipt Notes (GRN)</h1>
@@ -60,6 +84,13 @@ const GRNManagement = () => {
                 >
                     <Plus size={18} />
                     New Material Inward
+                </button>
+                <button
+                    onClick={downloadCsv}
+                    className="flex items-center gap-2 px-6 py-3 bg-white text-slate-700 rounded-2xl font-bold border-2 border-slate-100 hover:border-slate-200 transition-all shadow-sm active:scale-95"
+                >
+                    <Download size={18} />
+                    Download
                 </button>
             </div>
 
@@ -75,8 +106,8 @@ const GRNManagement = () => {
             </div>
 
             <div className="bg-white rounded-[32px] shadow-sm border border-slate-200/60 overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
+                <div className="table-responsive custom-scrollbar">
+                    <table className="w-full text-left border-collapse min-w-[600px]">
                         <thead>
                             <tr className="bg-slate-50/50 border-b border-slate-100">
                                 <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">GRN Details</th>

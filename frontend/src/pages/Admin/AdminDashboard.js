@@ -49,7 +49,7 @@ const AdminDashboard = () => {
             icon: <Building2 className="text-primary" size={24} />,
             path: "/admin/company",
             color: "bg-blue-50",
-            roles: ["Super Admin"]
+            roles: ["Admin"]
         },
         {
             title: "Financial Years",
@@ -57,7 +57,7 @@ const AdminDashboard = () => {
             icon: <Calendar className="text-orange-500" size={24} />,
             path: "/admin/financial-years",
             color: "bg-orange-50",
-            roles: ["Super Admin"]
+            roles: ["Admin"]
         },
         {
             title: "User Management",
@@ -65,7 +65,7 @@ const AdminDashboard = () => {
             icon: <Users className="text-blue-600" size={24} />,
             path: "/admin/users",
             color: "bg-indigo-50",
-            roles: ["Admin", "Super Admin"]
+            roles: ["Admin"]
         },
         {
             title: "Roles & Permissions",
@@ -73,7 +73,7 @@ const AdminDashboard = () => {
             icon: <Shield className="text-emerald-600" size={24} />,
             path: "/admin/roles",
             color: "bg-emerald-50",
-            roles: ["Super Admin"]
+            roles: ["Admin"]
         },
         {
             title: "Department Master",
@@ -81,7 +81,7 @@ const AdminDashboard = () => {
             icon: <Building2 className="text-indigo-600" size={24} />,
             path: "/admin/departments",
             color: "bg-purple-50",
-            roles: ["Super Admin"]
+            roles: ["Admin"]
         },
         {
             title: "Supplier Master",
@@ -89,7 +89,7 @@ const AdminDashboard = () => {
             icon: <Truck className="text-orange-600" size={24} />,
             path: "/admin/suppliers",
             color: "bg-orange-50",
-            roles: ["Super Admin"]
+            roles: ["Admin"]
         },
         {
             title: "Customer Master",
@@ -97,7 +97,7 @@ const AdminDashboard = () => {
             icon: <Users className="text-indigo-600" size={24} />,
             path: "/admin/customers",
             color: "bg-blue-50",
-            roles: ["Super Admin"]
+            roles: ["Admin"]
         },
         {
             title: "Item Master",
@@ -105,7 +105,7 @@ const AdminDashboard = () => {
             icon: <BoxIcon className="text-purple-600" size={24} />,
             path: "/admin/items",
             color: "bg-pink-50",
-            roles: ["Super Admin"]
+            roles: ["Admin"]
         }
     ].filter(card => card.roles.includes(userRole));
 
@@ -118,7 +118,7 @@ const AdminDashboard = () => {
     }
 
     return (
-        <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
+        <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 px-0 sm:px-2 min-w-0 animate-in fade-in duration-500">
             {/* Header */}
             <div className="bg-white rounded-[40px] p-10 shadow-sm border border-slate-200/60 relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-bl-full -mr-20 -mt-20 transition-transform group-hover:scale-110" />
@@ -133,7 +133,7 @@ const AdminDashboard = () => {
                         <h1 className="text-4xl font-black text-slate-900 tracking-tight">Admin Console</h1>
                         <p className="text-slate-500 font-medium text-lg mt-1">Configure your organization's digital ecosystem.</p>
                     </div>
-                    {userRole === 'Super Admin' && (
+                    {userRole === "Admin" && (
                         <div className="flex gap-4">
                             <button
                                 onClick={() => navigate('/admin/users')}
@@ -172,7 +172,7 @@ const AdminDashboard = () => {
 
             {/* Quick Actions & Stats */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {userRole === 'Super Admin' ? (
+                {userRole === "Admin" ? (
                     <div className="bg-slate-900 rounded-[40px] p-10 text-white relative overflow-hidden">
                         <div className="absolute bottom-0 right-0 w-48 h-48 bg-white/5 rounded-tl-full -mb-10 -mr-10" />
                         <h3 className="text-2xl font-black mb-8 flex items-center gap-3">

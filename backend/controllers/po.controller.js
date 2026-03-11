@@ -1,8 +1,28 @@
 const PO = require("../models/PO");
 const PR = require("../models/PR");
+const ProcurementQuotation = require("../models/ProcurementQuotation");
+
+const calcLine = ({ quantity, unitCost, gstRate }) => {
+    const qty = Number(quantity) || 0;
+    const price = Number(unitCost) || 0;
+    const rate = Number(gstRate) || 0;
+
+    const taxableValue = qty * price;
+    const gstAmount = taxableValue * (rate / 100);
+    const lineTotal = taxableValue + gstAmount;
+    return { taxableValue, gstAmount, lineTotal };
+};
 
 exports.createPO = async (req, res) => {
     try {
+        if (req.body?.prReference) {
+            const pr = await PR.findById(req.body.prReference);
+            if (!pr) return res.status(400).json({ message: "Invalid PR reference" });
+            if (pr.status !== "APPROVED") {
+                return res.status(400).json({ message: "Only APPROVED PRs can be converted into a PO" });
+            }
+        }
+
         const poData = {
             ...req.body,
             createdBy: req.user.id
@@ -22,6 +42,67 @@ exports.createPO = async (req, res) => {
         res.status(201).json(populatedPO);
     } catch (error) {
         res.status(400).json({ message: "Error creating Purchase Order", error: error.message });
+    }
+};
+
+exports.createPOFromQuotation = async (req, res) => {
+    try {
+        const quotation = await ProcurementQuotation.findById(req.params.quotationId)
+            .populate("prReference")
+            .populate("items.item");
+        if (!quotation) return res.status(404).json({ message: "Quotation not found" });
+        if (quotation.status !== "SENT") {
+            return res.status(400).json({ message: "PO can only be generated after quotation is SENT to suppliers" });
+        }
+
+        const supplierId = req.body?.supplier;
+        if (!supplierId) return res.status(400).json({ message: "Supplier is required to generate PO" });
+
+        const supplierAllowed = (quotation.suppliers || []).some((s) => String(s) === String(supplierId));
+        if (quotation.suppliers?.length > 0 && !supplierAllowed) {
+            return res.status(400).json({ message: "Selected supplier is not part of this quotation" });
+        }
+
+        const items = (quotation.items || []).map((it) => {
+            const unitCost = Number(it.unitPrice) || 0;
+            const gstRate = Number(it.gstRate) || 0;
+            const quantity = Number(it.quantity) || 0;
+            const { taxableValue, gstAmount, lineTotal } = calcLine({ quantity, unitCost, gstRate });
+
+            return {
+                item: it.item?._id || it.item,
+                description: it.description,
+                quantity,
+                unit: it.unit,
+                unitCost,
+                totalCost: taxableValue, // legacy (pre-GST) line total
+                gstRate,
+                taxableValue,
+                gstAmount,
+                lineTotal,
+            };
+        });
+
+        const po = await PO.create({
+            prReference: quotation.prReference?._id || quotation.prReference,
+            quotationReference: quotation._id,
+            supplier: supplierId,
+            items,
+            totalAmount: quotation.grandTotal,
+            status: "OPEN",
+            createdBy: req.user.id,
+        });
+
+        const populatedPO = await PO.findById(po._id)
+            .populate("supplier", "name contact taxInfo")
+            .populate("items.item")
+            .populate("createdBy", "name")
+            .populate("prReference", "prNumber")
+            .populate("quotationReference", "quotationNumber status");
+
+        res.status(201).json(populatedPO);
+    } catch (error) {
+        res.status(400).json({ message: "Error creating Purchase Order from quotation", error: error.message });
     }
 };
 

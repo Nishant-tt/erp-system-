@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 
 const supplierSchema = new mongoose.Schema(
     {
+        code: { type: String, trim: true, default: "" }, // Vendor Code
         name: { type: String, required: true },
         tagline: { type: String },
         address: {

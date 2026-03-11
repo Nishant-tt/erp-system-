@@ -6,8 +6,8 @@ const role = require("../middleware/role.middleware");
 
 router.get("/", auth, customerCtrl.getCustomers);
 router.get("/:id", auth, customerCtrl.getCustomerById);
-router.post("/", auth, role(["Super Admin"]), customerCtrl.createCustomer);
-router.put("/:id", auth, role(["Super Admin"]), customerCtrl.updateCustomer);
-router.delete("/:id", auth, role(["Super Admin"]), customerCtrl.deleteCustomer);
+router.post("/", auth, role(["Admin"]), customerCtrl.createCustomer);
+router.put("/:id", auth, role(["Admin"]), customerCtrl.updateCustomer);
+router.delete("/:id", auth, role(["Admin"]), customerCtrl.deleteCustomer);
 
 module.exports = router;

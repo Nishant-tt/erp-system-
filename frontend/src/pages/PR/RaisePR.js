@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPRAPI } from '../../api/pr';
 import { getItemsAPI } from '../../api/itemMaster';
+import { getSuppliersAPI } from '../../api/supplier';
 import {
     Plus,
     Trash2,
@@ -124,6 +125,14 @@ const RaisePR = () => {
     const [message, setMessage] = useState({ type: '', text: '' });
     const [masterItems, setMasterItems] = useState([]);
     const [loadingItems, setLoadingItems] = useState(true);
+    const [suppliers, setSuppliers] = useState([]);
+
+    const [requiredDate, setRequiredDate] = useState('');
+    const [budgetCode, setBudgetCode] = useState('');
+    const [costCenter, setCostCenter] = useState('');
+    const [priority, setPriority] = useState('MEDIUM');
+    const [vendorSuggestion, setVendorSuggestion] = useState('');
+    const [remarks, setRemarks] = useState('');
 
     const [items, setItems] = useState([
         { item: '', description: '', quantity: 1, unit: 'pcs', estimatedUnitCost: 0 }
@@ -133,8 +142,12 @@ const RaisePR = () => {
     useEffect(() => {
         const fetchItems = async () => {
             try {
-                const data = await getItemsAPI();
-                setMasterItems(data.filter(i => i.isActive));
+                const [itemsData, suppliersData] = await Promise.all([
+                    getItemsAPI(),
+                    getSuppliersAPI()
+                ]);
+                setMasterItems((itemsData || []).filter(i => i.isActive));
+                setSuppliers((suppliersData || []).filter(s => s.isActive));
             } catch (err) {
                 console.error('Failed to load items:', err);
                 setMessage({ type: 'error', text: 'Failed to load item master data.' });
@@ -223,10 +236,16 @@ const RaisePR = () => {
         setIsSubmitting(true);
         setMessage({ type: '', text: '' });
 
-        const totalAmount = validItems.reduce((sum, item) => sum + item.totalCost, 0) * 1.18;
+        const totalAmount = validItems.reduce((sum, item) => sum + item.totalCost, 0);
 
         try {
             await createPRAPI({
+                requiredDate: requiredDate || null,
+                budgetCode,
+                costCenter,
+                priority,
+                vendorSuggestion: vendorSuggestion || null,
+                remarks,
                 items: validItems,
                 status: status,
                 totalAmount: totalAmount
@@ -249,7 +268,7 @@ const RaisePR = () => {
     }
 
     return (
-        <div className="max-w-5xl mx-auto space-y-8 animate-in slide-in-from-bottom-8 duration-500">
+        <div className="max-w-5xl mx-auto space-y-6 sm:space-y-8 px-2 sm:px-0 min-w-0 animate-in slide-in-from-bottom-8 duration-500">
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
@@ -278,6 +297,76 @@ const RaisePR = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Items List */}
                 <div className="lg:col-span-2 space-y-6">
+                    <div className="bg-white rounded-[40px] p-8 shadow-sm border border-slate-200/60 space-y-6">
+                        <h2 className="text-sm font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-4">Request Details</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Required Date</label>
+                                <input
+                                    type="date"
+                                    className="w-full px-5 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-primary/20 transition-all font-bold text-sm"
+                                    value={requiredDate}
+                                    onChange={(e) => setRequiredDate(e.target.value)}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Priority</label>
+                                <select
+                                    className="w-full px-5 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-primary/20 transition-all font-bold text-sm appearance-none"
+                                    value={priority}
+                                    onChange={(e) => setPriority(e.target.value)}
+                                >
+                                    <option value="LOW">LOW</option>
+                                    <option value="MEDIUM">MEDIUM</option>
+                                    <option value="HIGH">HIGH</option>
+                                    <option value="URGENT">URGENT</option>
+                                </select>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Budget Code</label>
+                                <input
+                                    type="text"
+                                    placeholder="e.g. IT-OPS-001"
+                                    className="w-full px-5 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-primary/20 transition-all font-bold text-sm"
+                                    value={budgetCode}
+                                    onChange={(e) => setBudgetCode(e.target.value)}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Cost Center</label>
+                                <input
+                                    type="text"
+                                    placeholder="e.g. CC-1001"
+                                    className="w-full px-5 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-primary/20 transition-all font-bold text-sm"
+                                    value={costCenter}
+                                    onChange={(e) => setCostCenter(e.target.value)}
+                                />
+                            </div>
+                            <div className="space-y-2 md:col-span-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Vendor Suggestion (Optional)</label>
+                                <select
+                                    className="w-full px-5 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-primary/20 transition-all font-bold text-sm appearance-none"
+                                    value={vendorSuggestion}
+                                    onChange={(e) => setVendorSuggestion(e.target.value)}
+                                >
+                                    <option value="">No suggestion</option>
+                                    {suppliers.map(s => (
+                                        <option key={s._id} value={s._id}>{s.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="space-y-2 md:col-span-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Remarks / Notes</label>
+                                <textarea
+                                    rows="3"
+                                    className="w-full px-5 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-primary/20 transition-all font-bold text-sm resize-none"
+                                    value={remarks}
+                                    onChange={(e) => setRemarks(e.target.value)}
+                                    placeholder="Add justification, context, or constraints..."
+                                />
+                            </div>
+                        </div>
+                    </div>
                     <div className="bg-white rounded-[40px] p-8 shadow-sm border border-slate-200/60 relative">
                         <div className="absolute top-0 right-0 p-8 text-slate-50/50 -mr-4 -mt-4">
                             <ShoppingCart size={120} />
@@ -370,19 +459,12 @@ const RaisePR = () => {
                                     {calculateTotal().toLocaleString('en-IN')}
                                 </span>
                             </div>
-                            <div className="flex justify-between items-center text-slate-400">
-                                <span className="text-xs font-bold uppercase tracking-widest">GST (Estimated)</span>
-                                <span className="text-sm font-black text-white flex items-center gap-1">
-                                    <IndianRupee size={14} />
-                                    {(calculateTotal() * 0.18).toLocaleString('en-IN')}
-                                </span>
-                            </div>
                             <div className="pt-4 border-t border-white/10 flex justify-between items-end">
-                                <span className="text-[10px] font-black text-primary uppercase tracking-widest">Grand Total</span>
+                                <span className="text-[10px] font-black text-primary uppercase tracking-widest">Total</span>
                                 <div className="text-right">
                                     <div className="flex items-center justify-end gap-1 text-4xl font-black tracking-tighter text-white">
                                         <IndianRupee size={24} className="text-primary mb-1" />
-                                        {(calculateTotal() * 1.18).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                                        {calculateTotal().toLocaleString('en-IN', { maximumFractionDigits: 0 })}
                                     </div>
                                     <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest mt-1 italic">*Final cost subject to vendor quote</p>
                                 </div>

@@ -21,6 +21,14 @@ const grnSchema = new mongoose.Schema(
         billNumber: { type: String },
         billDate: { type: Date },
         remarks: { type: String },
+        verificationStatus: {
+            type: String,
+            enum: ["PENDING", "VERIFIED", "REJECTED"],
+            default: "PENDING"
+        },
+        verifiedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        verifiedAt: { type: Date },
+        verificationComments: { type: String },
         status: {
             type: String,
             enum: ["COMPLETED", "CANCELLED"],

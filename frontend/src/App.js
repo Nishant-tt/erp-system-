@@ -21,14 +21,18 @@ import Performance from './pages/Reports/Performance';
 import DashboardLayout from './components/Layout/DashboardLayout';
 
 // Procurement Flow
+import ProcurementQuotationManagement from './pages/ProcurementQuotation/ProcurementQuotationManagement';
+import CreateProcurementQuotation from './pages/ProcurementQuotation/CreateProcurementQuotation';
+import ProcurementQuotationDetails from './pages/ProcurementQuotation/ProcurementQuotationDetails';
+import ProcurementQuotationApprovalQueue from './pages/ProcurementQuotation/ProcurementQuotationApprovalQueue';
 import PurchaseOrderManagement from './pages/PurchaseOrder/PurchaseOrderManagement';
 import CreatePurchaseOrder from './pages/PurchaseOrder/CreatePurchaseOrder';
+import PurchaseOrderDetails from './pages/PurchaseOrder/PurchaseOrderDetails';
+import PurchaseOrderApprovalQueue from './pages/PurchaseOrder/PurchaseOrderApprovalQueue';
 import GRNManagement from './pages/GRN/GRNManagement';
 import CreateGRN from './pages/GRN/CreateGRN';
-import InvoiceManagement from './pages/Invoice/InvoiceManagement';
-import CreateInvoice from './pages/Invoice/CreateInvoice';
-import PaymentManagement from './pages/Payment/ProcessPayment';
-import ProcessPayment from './pages/Payment/ProcessPayment';
+import GRNDetails from './pages/GRN/GRNDetails';
+import GRNApprovalQueue from './pages/GRN/GRNApprovalQueue';
 
 // Sales & CRM Flow
 import LeadManagement from './pages/CRM/LeadManagement';
@@ -76,6 +80,7 @@ function App() {
           <Route path="/admin/items" element={<ItemMaster />} />
           <Route path="/admin/company" element={<CompanySettings />} />
           <Route path="/admin/financial-years" element={<FinancialYearManagement />} />
+      {/* Procurement Lifecycle */}
 
           {/* Requisition Flow */}
           <Route path="/prs" element={<PRManagement />} />
@@ -83,15 +88,23 @@ function App() {
           <Route path="/prs/approvals" element={<ApprovalQueue />} />
           <Route path="/prs/:id" element={<PRDetails />} />
 
-          {/* Procurement Lifecycle */}
+          {/* Quotation Flow */}
+          <Route path="/procurement-quotations" element={<ProcurementQuotationManagement />} />
+          <Route path="/procurement-quotations/create" element={<CreateProcurementQuotation />} />
+          <Route path="/procurement-quotations/approvals" element={<ProcurementQuotationApprovalQueue />} />
+          <Route path="/procurement-quotations/:id" element={<ProcurementQuotationDetails />} />
+          
+          {/* Purchase Order Flow */}
           <Route path="/purchase-orders" element={<PurchaseOrderManagement />} />
+          <Route path="/purchase-orders/approvals" element={<PurchaseOrderApprovalQueue />} />
           <Route path="/purchase-orders/create" element={<CreatePurchaseOrder />} />
+          <Route path="/purchase-orders/:id" element={<PurchaseOrderDetails />} />
+          
+          {/* GRN Flow */}
           <Route path="/grns" element={<GRNManagement />} />
+          <Route path="/grns/approvals" element={<GRNApprovalQueue />} />
           <Route path="/grns/create" element={<CreateGRN />} />
-          <Route path="/invoices" element={<InvoiceManagement />} />
-          <Route path="/invoices/create" element={<CreateInvoice />} />
-          <Route path="/payments" element={<PaymentManagement />} />
-          <Route path="/payments/process" element={<ProcessPayment />} />
+          <Route path="/grns/:id" element={<GRNDetails />} />
 
           {/* Sales & CRM Lifecycle */}
           <Route path="/leads" element={<LeadManagement />} />

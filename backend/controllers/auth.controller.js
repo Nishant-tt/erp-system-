@@ -26,11 +26,17 @@ exports.login = async (req, res) => {
 
   const companyDetails = await Company.findById(selectedFY.company);
 
-  // Only Super Admin can login into inactive financial years
-  if (!selectedFY.isActive && user.role.name !== 'Super Admin') {
+  // Only Admin can login into inactive financial years
+  if (!selectedFY.isActive && user.role.name !== "Admin") {
     return res.status(403).json({
-      message: "Access Denied: Only Super Admins can login to a closed/previous financial year."
+      message: "Access Denied: Only Admin can login to a closed/previous financial year."
     });
+  }
+
+  // Backward-compatibility: older DBs may still contain "Super Admin".
+  // Normalize to "Admin" in token + response so the rest of the app sees only one admin role.
+  if (user?.role?.name === "Super Admin") {
+    user.role.name = "Admin";
   }
 
   const token = generateToken({

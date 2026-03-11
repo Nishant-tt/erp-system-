@@ -147,8 +147,8 @@ const UserManagement = () => {
     }
 
     return (
-        <div className="max-w-7xl mx-auto space-y-6">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-0 sm:px-2 min-w-0">
+            <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 sm:gap-4">
                 <div>
                     <h1 className="text-2xl font-black text-slate-900 tracking-tight">User Management</h1>
                     <p className="text-slate-500 text-sm font-medium">Control platform access and organizational assignments.</p>
@@ -170,9 +170,9 @@ const UserManagement = () => {
                 </div>
             )}
 
-            <div className="bg-white rounded-3xl shadow-sm border border-slate-200/60 overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
+            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-slate-200/60 overflow-hidden">
+                <div className="table-responsive custom-scrollbar">
+                    <table className="w-full text-left border-collapse min-w-[560px]">
                         <thead>
                             <tr className="bg-slate-50/50 border-b border-slate-100">
                                 <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Member</th>
@@ -239,24 +239,24 @@ const UserManagement = () => {
 
             {/* Create/Edit User Modal */}
             {showModal && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
                     <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setShowModal(false)} />
-                    <div className="relative w-full max-w-md bg-white rounded-[32px] shadow-2xl border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-200">
-                        <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                            <div>
-                                <h3 className="text-xl font-black text-slate-900 tracking-tight">
+                    <div className="relative w-full max-w-md max-h-[90vh] bg-white rounded-t-3xl sm:rounded-[32px] shadow-2xl border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col">
+                        <div className="p-4 sm:p-6 md:p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0 gap-3">
+                            <div className="min-w-0">
+                                <h3 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight truncate">
                                     {editingUser ? 'Edit Member' : 'New Member'}
                                 </h3>
-                                <p className="text-xs text-slate-500 font-medium">
+                                <p className="text-xs text-slate-500 font-medium truncate">
                                     {editingUser ? 'Update user details and access.' : 'Add user and assign organizational roles.'}
                                 </p>
                             </div>
-                            <button onClick={() => setShowModal(false)} className="p-2 hover:bg-white rounded-xl transition-colors text-slate-400 hover:text-slate-600">
+                            <button onClick={() => setShowModal(false)} className="p-2 hover:bg-white rounded-xl transition-colors text-slate-400 hover:text-slate-600 shrink-0" aria-label="Close">
                                 <X size={20} />
                             </button>
                         </div>
 
-                        <form onSubmit={handleSubmit} className="p-8 space-y-5">
+                        <form onSubmit={handleSubmit} className="p-4 sm:p-6 md:p-8 space-y-5 overflow-y-auto custom-scrollbar flex-1 min-h-0">
                             <div className="space-y-1.5">
                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Full Name</label>
                                 <div className="relative group">
@@ -326,9 +326,9 @@ const UserManagement = () => {
                                             <option value="">Select Role</option>
                                             {roles
                                                 .filter(r => {
-                                                    // Admins cannot create Admins or Super Admins
+                                                    // Admin cannot create another Admin
                                                     if (userRole === 'Admin') {
-                                                        return r.name !== 'Admin' && r.name !== 'Super Admin';
+                                                        return r.name !== 'Admin';
                                                     }
                                                     return true;
                                                 })

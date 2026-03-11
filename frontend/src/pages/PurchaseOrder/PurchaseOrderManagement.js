@@ -9,7 +9,8 @@ import {
     ChevronRight,
     Clock,
     Truck,
-    Loader2
+    Loader2,
+    Download
 } from 'lucide-react';
 
 const PurchaseOrderManagement = () => {
@@ -55,6 +56,28 @@ const PurchaseOrderManagement = () => {
     const startIndex = (page - 1) * pageSize;
     const paginatedPOs = filteredPOs.slice(startIndex, startIndex + pageSize);
 
+    const downloadCsv = () => {
+        const rows = filteredPOs.map(po => ({
+            poNumber: po.poNumber,
+            supplier: po.supplier?.name || '',
+            status: po.status,
+            totalAmount: po.totalAmount,
+            createdAt: po.createdAt
+        }));
+        const headers = Object.keys(rows[0] || { poNumber: '', supplier: '', status: '', totalAmount: '', createdAt: '' });
+        const csv = [
+            headers.join(','),
+            ...rows.map(r => headers.map(h => `"${String(r[h] ?? '').replaceAll('"', '""')}"`).join(','))
+        ].join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `POs_${new Date().toISOString().slice(0, 10)}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+
     if (isLoading) {
         return (
             <div className="flex items-center justify-center min-h-[400px]">
@@ -64,8 +87,8 @@ const PurchaseOrderManagement = () => {
     }
 
     return (
-        <div className="max-w-7xl mx-auto space-y-6 animate-in fade-in duration-500">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-0 sm:px-2 min-w-0 animate-in fade-in duration-500">
+            <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 sm:gap-4">
                 <div>
                     <h1 className="text-2xl font-black text-slate-900 tracking-tight">Purchase Orders</h1>
                     <p className="text-slate-500 text-sm font-medium">Manage and track your official procurement orders.</p>
@@ -76,6 +99,13 @@ const PurchaseOrderManagement = () => {
                 >
                     <Plus size={18} />
                     Create New PO
+                </button>
+                <button
+                    onClick={downloadCsv}
+                    className="flex items-center gap-2 px-6 py-3 bg-white text-slate-700 rounded-2xl font-bold border-2 border-slate-100 hover:border-slate-200 transition-all shadow-sm active:scale-95"
+                >
+                    <Download size={18} />
+                    Download
                 </button>
             </div>
 
@@ -92,16 +122,16 @@ const PurchaseOrderManagement = () => {
                 </div>
             </div>
 
-            <div className="bg-white rounded-[32px] shadow-sm border border-slate-200/60 overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
+            <div className="bg-white rounded-2xl sm:rounded-[32px] shadow-sm border border-slate-200/60 overflow-hidden">
+                <div className="table-responsive overflow-x-auto custom-scrollbar">
+                    <table className="w-full text-left border-collapse min-w-[600px]">
                         <thead>
                             <tr className="bg-slate-50/50 border-b border-slate-100">
-                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Order Details</th>
-                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Supplier</th>
-                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Amount</th>
-                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
-                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Action</th>
+                                <th className="px-4 sm:px-8 py-4 sm:py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Order Details</th>
+                                <th className="px-4 sm:px-8 py-4 sm:py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Supplier</th>
+                                <th className="px-4 sm:px-8 py-4 sm:py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Amount</th>
+                                <th className="px-4 sm:px-8 py-4 sm:py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
+                                <th className="px-4 sm:px-8 py-4 sm:py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Action</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
@@ -111,7 +141,7 @@ const PurchaseOrderManagement = () => {
                                     className="group hover:bg-slate-50/50 transition-all cursor-pointer"
                                     onClick={() => navigate(`/purchase-orders/${po._id}`)}
                                 >
-                                    <td className="px-8 py-6">
+                                    <td className="px-4 sm:px-8 py-4 sm:py-6">
                                         <div className="flex items-center gap-4">
                                             <div className="w-12 h-12 bg-primary/5 rounded-2xl flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
                                                 <FileText size={20} />
@@ -125,16 +155,16 @@ const PurchaseOrderManagement = () => {
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-8 py-6">
+                                    <td className="px-4 sm:px-8 py-4 sm:py-6">
                                         <div className="flex items-center gap-2">
                                             <Truck size={14} className="text-slate-400" />
                                             <span className="font-bold text-slate-700">{po.supplier?.name}</span>
                                         </div>
                                     </td>
-                                    <td className="px-8 py-6">
+                                    <td className="px-4 sm:px-8 py-4 sm:py-6">
                                         <p className="font-black text-slate-900">₹{po.totalAmount.toLocaleString()}</p>
                                     </td>
-                                    <td className="px-8 py-6">
+                                    <td className="px-4 sm:px-8 py-4 sm:py-6">
                                         <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${getStatusStyle(po.status)}`}>
                                             {po.status}
                                         </span>
@@ -148,7 +178,7 @@ const PurchaseOrderManagement = () => {
                             ))}
                             {totalFiltered === 0 && (
                                 <tr>
-                                    <td colSpan="5" className="px-8 py-20 text-center">
+                                    <td colSpan="5" className="px-4 sm:px-8 py-12 sm:py-20 text-center">
                                         <div className="flex flex-col items-center gap-4">
                                             <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center text-slate-200">
                                                 <FileText size={40} />

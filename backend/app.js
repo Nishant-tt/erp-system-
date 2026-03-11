@@ -24,6 +24,7 @@ app.use("/api/items", require("./routes/itemMaster.routes"));
 app.use("/api/prs", require("./routes/pr.routes"));
 app.use("/api/pos", require("./routes/po.routes"));
 app.use("/api/grns", require("./routes/grn.routes"));
+app.use("/api/procurement-quotations", require("./routes/procurementQuotation.routes"));
 app.use("/api/invoices", require("./routes/purchaseInvoice.routes"));
 app.use("/api/payments", require("./routes/vendorPayment.routes"));
 app.use("/api/company", require("./routes/company.routes"));
